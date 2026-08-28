@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#111111" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HOLO LAB" />
+  <link rel="apple-touch-icon" href="./icon-180.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="stylesheet" href="./style.css" />
+  <title>HOLO LAB</title>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">DIGITAL STICKER EXPERIMENT</div>
+        <h1>HOLO LAB</h1>
+      </div>
+      <button id="resetBtn" class="ghost" type="button">RESET</button>
+    </header>
+
+    <nav class="tabs" aria-label="モード">
+      <button class="tab active" data-mode="tilt" type="button">1 CARD / TILT</button>
+      <button class="tab" data-mode="stereo" type="button">2 CARDS / STEREO</button>
+    </nav>
+
+    <section id="tiltMode" class="mode active">
+      <div class="stage">
+        <div id="tiltCard" class="sticker" aria-label="傾きで変化するホログラムシール">
+          <div class="base-grid"></div>
+          <div class="radial-lines"></div>
+          <div class="spectral"></div>
+          <div class="foil"></div>
+          <div class="ghost ghost-a">◈</div>
+          <div class="ghost ghost-b">✦</div>
+          <div class="orb"></div>
+          <div class="figure">
+            <div class="figure-ring"></div>
+            <div class="figure-core">H</div>
+          </div>
+          <div class="microtext">PARALLAX / FOIL / SHIFT / DEPTH</div>
+          <div class="shine"></div>
+          <div class="edge"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="sensorBtn" class="primary" type="button">TILT START</button>
+        <div id="sensorStatus" class="status">未接続。タッチ操作でも試せます。</div>
+        <div class="hint">カード上を指で動かすと、傾きの代わりに光と視差を操作できます。</div>
+      </div>
+    </section>
+
+    <section id="stereoMode" class="mode">
+      <div class="stereo-help">
+        2枚を交差法で見て中央像を結びます。カード上を左右にドラッグすると深度、上下で光学状態が変化します。
+      </div>
+
+      <div id="stereoStage" class="stereo-stage">
+        <div class="stereo-card sticker stereo-left" aria-label="左眼用シール">
+          <div class="base-grid"></div>
+          <div class="radial-lines"></div>
+          <div class="spectral"></div>
+          <div class="foil"></div>
+          <div class="ghost ghost-a">◈</div>
+          <div class="ghost ghost-b">✦</div>
+          <div class="orb"></div>
+          <div class="figure">
+            <div class="figure-ring"></div>
+            <div class="figure-core">H</div>
+          </div>
+          <div class="microtext">STEREO / SHIFT / DEPTH</div>
+          <div class="shine"></div>
+          <div class="edge"></div>
+        </div>
+
+        <div class="stereo-card sticker stereo-right" aria-label="右眼用シール">
+          <div class="base-grid"></div>
+          <div class="radial-lines"></div>
+          <div class="spectral"></div>
+          <div class="foil"></div>
+          <div class="ghost ghost-a">◈</div>
+          <div class="ghost ghost-b">✦</div>
+          <div class="orb"></div>
+          <div class="figure">
+            <div class="figure-ring"></div>
+            <div class="figure-core">H</div>
+          </div>
+          <div class="microtext">STEREO / SHIFT / DEPTH</div>
+          <div class="shine"></div>
+          <div class="edge"></div>
+        </div>
+      </div>
+
+      <div class="readouts">
+        <span>DEPTH <b id="depthValue">0</b></span>
+        <span>PHASE <b id="phaseValue">50</b></span>
+      </div>
+      <div class="hint">左右ドラッグ＝視差量 / 上下ドラッグ＝ホログラム位相</div>
+    </section>
+
+    <footer>HOLO LAB prototype v0.1</footer>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>
