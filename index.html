@@ -1,27 +1,43 @@
 <!doctype html>
 <html lang="ja"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#efefed"><meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="HOLO LAB">
-<link rel="apple-touch-icon" href="./icon-180.png"><link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./style.css"><title>HOLO LAB</title></head>
-<body>
-<div id="shell">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#efefed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="HOLO LAB">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="./style.css">
+<title>HOLO LAB</title></head><body><div id="shell">
+
 <section id="menu" class="screen active">
   <header><h1>HOLO LAB</h1><p>DIGITAL HOLOGRAM STICKERS</p></header>
-  <button class="stickerTile" id="openMira">
-    <img src="./mira-jii.jpg" alt=""><span><b>聖虚MIRA爺</b><small>セントホロミラーじぃ</small></span>
+  <button class="tile" id="openMira">
+    <img src="./mira-jii.jpg" alt="">
+    <span><b>聖虚MIRA爺</b><small>セントホロミラーじぃ</small></span>
   </button>
-  <footer>HOLO LAB v0.4</footer>
+  <footer>HOLO LAB v0.6</footer>
 </section>
 
 <section id="viewer" class="screen">
-  <div class="viewerTop"><button id="back">‹ MENU</button><div><b>聖虚MIRA爺</b><small>セントホロミラーじぃ</small></div><button id="start">TILT START</button></div>
-  <div id="pair">
-    <div class="card"><img class="art" src="./mira-jii.jpg" alt=""><i class="silver"></i><i class="spectral"></i></div>
-    <div class="card"><img class="art" src="./mira-jii.jpg" alt=""><i class="silver"></i><i class="spectral"></i></div>
+  <div class="viewerFrame">
+    <div class="bar top">
+      <button id="back">‹ MENU</button>
+      <div class="name"><b>聖虚MIRA爺</b><small>セントホロミラーじぃ</small></div>
+      <button id="start">TILT START</button>
+    </div>
+
+    <div id="pair">
+      <div class="card"></div>
+      <div class="card"></div>
+    </div>
+
+    <div class="bar bottom">
+      <span id="status">交差法で中央に結像 / 傾けてホロを操作</span>
+      <button id="reset">RESET</button>
+    </div>
   </div>
-  <div class="viewerBottom"><span id="status">交差法で中央に結像 / 傾けてホロを操作</span><button id="reset">RESET</button></div>
 </section>
-</div>
-<script src="./app.js"></script></body></html>
+
+</div><script src="./app.js"></script></body></html>
