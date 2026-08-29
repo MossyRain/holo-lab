@@ -53,7 +53,7 @@ function paint(t){
    // mask image itself is white; tint via drop-shadow + brightness trick
    el.style.filter=`brightness(0) saturate(100%) invert(1) drop-shadow(0 0 0 rgb(${r},${g},${b}))`;
    // material reacts subtly to tilt independently from color
- });
+ }));
  cards.forEach(card=>{
    const mat=card.querySelector('.material');
    mat.style.transform=`translate(${t*1.5}px,${t*.7}px) scale(1.01)`;
