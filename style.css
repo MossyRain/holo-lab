@@ -72,4 +72,8 @@ footer{margin-top:auto;font-size:10px;color:#999;letter-spacing:.08em}
 .top button:first-child{margin-left:2px}
 .top button:last-child{margin-right:2px}
 
-.bgHolo{position:absolute;inset:0;pointer-events:none;mix-blend-mode:color;opacity:.38}
+.bgHolo{position:absolute;inset:0;pointer-events:none;mix-blend-mode:color;opacity:.62}
+
+html{background:#08080a!important}
+body{background:#08080a!important}
+#shell{background:#08080a!important}

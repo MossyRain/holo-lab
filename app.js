@@ -36,9 +36,9 @@ let target=0,current=0,raf=null;
 const themeMeta=document.querySelector('meta[name="theme-color"]');
 const show=v=>{
  menu.classList.toggle('active',!v);viewer.classList.toggle('active',v);
- document.documentElement.style.background=v?'#08080a':'#efefed';
- document.body.style.background=v?'#08080a':'#efefed';
- if(themeMeta)themeMeta.setAttribute('content',v?'#08080a':'#efefed');
+ document.documentElement.style.background='#08080a';
+ document.body.style.background='#08080a';
+ if(themeMeta)themeMeta.setAttribute('content','#08080a');
 };
 openMira.addEventListener('click',()=>show(true));backBtn.addEventListener('click',()=>show(false));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -62,29 +62,32 @@ function paint(t){
    specs.forEach(([n,base,rate,sat])=>{
      const local=e + stereoPhase;
      const wobble=Math.sin((local*1.55 + base/360)*Math.PI)*13;
-     const hue=base + local*138*rate + wobble;
-     // Outlines are themselves holographic material: they can become bright and strongly coloured.
-     const linePulse=(Math.sin((local*2.1 + base/180)*Math.PI)+1)/2;
-     const light=n==='01_dark_lines' ? (.38 + linePulse*.24) : (n==='07_silver_white' ? .50 : .43);
-     const s=n==='01_dark_lines' ? .78 : sat*.78;
-     const [r,g,b]=hueRGB(hue,s,light);
+     const hue=base + local*248*rate + wobble*1.35;
+     // "Dark lines" are now treated as just another holographic paint region.
+     // They can be as bright as the surrounding painted areas.
+     const light=n==='07_silver_white' ? .50 : .47;
+     const s=n==='01_dark_lines' ? .92 : Math.min(.90,sat*.88);
+     const lineExtra=n==='01_dark_lines' ? Math.sin(local*Math.PI*2.35)*34 : 0;
+     const [r,g,b]=hueRGB(hue+lineExtra,s,light);
      const el=card.querySelector(`[data-mask="${n}"]`);
      el.style.backgroundColor=`rgb(${r},${g},${b})`;
-     el.style.opacity=n==='07_silver_white' ? '.19' : (n==='01_dark_lines' ? '.72' : '.48');
+     el.style.opacity=n==='07_silver_white' ? '.20' : (n==='01_dark_lines' ? '.86' : '.54');
    });
-   // The exposed silver background is holographic too. Two broad, muted colour fields
-   // move continuously with tilt and have the same left/right phase offset.
+   // The exposed silver background is a major holographic surface.
+   // Small tilt movements sweep through a much larger part of the spectrum.
    const bg=card.querySelector('.bgHolo');
-   const bh1=205 + (e+stereoPhase)*118;
-   const bh2=292 - (e+stereoPhase)*104;
-   const c1=hueRGB(bh1,.48,.43), c2=hueRGB(bh2,.42,.39);
-   const pos=50 + (e+stereoPhase)*24;
-   bg.style.background=`linear-gradient(118deg,
+   const q=e+stereoPhase;
+   const bh1=188 + q*255;
+   const bh2=304 - q*230;
+   const bh3=58  + q*285;
+   const c1=hueRGB(bh1,.68,.45), c2=hueRGB(bh2,.64,.42), c3=hueRGB(bh3,.62,.46);
+   const pos=50 + q*36;
+   bg.style.background=`linear-gradient(121deg,
      rgb(${c1[0]},${c1[1]},${c1[2]}) 0%,
-     rgba(${c1[0]},${c1[1]},${c1[2]},.42) ${Math.max(12,pos-18)}%,
-     rgb(${c2[0]},${c2[1]},${c2[2]}) ${Math.min(88,pos+18)}%,
+     rgb(${c2[0]},${c2[1]},${c2[2]}) ${Math.max(18,pos-24)}%,
+     rgb(${c3[0]},${c3[1]},${c3[2]}) ${Math.min(82,pos+24)}%,
      rgb(${c1[0]},${c1[1]},${c1[2]}) 100%)`;
-   bg.style.opacity=(.28+Math.abs(e)*.12).toFixed(3);
+   bg.style.opacity=(.48+Math.abs(q)*.20).toFixed(3);
    const mat=card.querySelector('.material');
    mat.style.transform=`translate(${(e+stereoPhase*.35)*1.8}px,${e*.8}px) scale(1.012)`;
    mat.style.opacity=(.34+Math.abs(e)*.07).toFixed(3);
@@ -102,7 +105,7 @@ function setTarget(v){target=clamp(v,-1,1)}
 function orient(e){
  if(!active)return;
  if(bB===null){bB=e.beta||0;bG=e.gamma||0}
- let x=((e.gamma||0)-bG)/30,y=((e.beta||0)-bB)/48;
+ let x=((e.gamma||0)-bG)/11,y=((e.beta||0)-bB)/18;
  if(matchMedia('(orientation:portrait)').matches){let q=x;x=y;y=-q}
  setTarget(x+y*.18);
 }
@@ -119,7 +122,7 @@ startBtn.addEventListener('click',async()=>{
 resetBtn.addEventListener('click',()=>{bB=bG=null;setTarget(0)});
 function pointer(e){
  const r=pair.getBoundingClientRect();
- setTarget(((e.clientX-r.left)/r.width-.5)*2);
+ setTarget(((e.clientX-r.left)/r.width-.5)*3.2);
 }
 pair.onpointerdown=e=>{drag=true;pair.setPointerCapture(e.pointerId);pointer(e)};
 pair.onpointermove=e=>{if(drag)pointer(e)};
