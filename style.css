@@ -15,11 +15,7 @@ footer{margin-top:auto;font-size:10px;color:#999;letter-spacing:.08em}
   display:grid;
   grid-template-rows:34px minmax(0,1fr) 30px;
   gap:6px;
-  padding:
-    max(6px,env(safe-area-inset-top))
-    max(10px,env(safe-area-inset-right))
-    max(6px,env(safe-area-inset-bottom))
-    max(10px,env(safe-area-inset-left));
+  padding:max(6px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
   overflow:hidden;
 }
 .bar{min-width:0;display:grid;align-items:center;gap:8px}
@@ -30,39 +26,27 @@ footer{margin-top:auto;font-size:10px;color:#999;letter-spacing:.08em}
 #viewer button{border:1px solid #34343b;background:#16161a;color:#fff;border-radius:999px;padding:6px 10px;font-size:9px;white-space:nowrap}
 #start{background:#f3f3f2!important;color:#111!important;border-color:#f3f3f2!important;font-weight:700}
 
-#pair{
-  min-height:0;min-width:0;
-  width:100%;height:100%;
-  display:flex;align-items:center;justify-content:center;
-  gap:clamp(8px,1.2vw,14px);
-  touch-action:none;overflow:hidden;
-}
+#pair{min-height:0;min-width:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:clamp(8px,1.2vw,14px);touch-action:none;overflow:hidden}
 .card{
   position:relative;flex:0 0 auto;
-  /* fit by both width and height, with room reserved for top+bottom controls */
   width:min(calc((100vw - 54px)/2),calc(100vh - 94px));
   height:min(calc((100vw - 54px)/2),calc(100vh - 94px));
-  max-width:100%;max-height:100%;
-  aspect-ratio:1;overflow:hidden;border-radius:3.2%;
-  background:#bfc0bd;box-shadow:0 0 0 1px #ffffff22;
+  max-width:100%;max-height:100%;aspect-ratio:1;overflow:hidden;border-radius:3.2%;
+  background:linear-gradient(135deg,#d5d5d2,#8b8d90 46%,#c7c8c5 74%,#7f8287);
+  box-shadow:0 0 0 1px #ffffff22;
 }
 .layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
-.base{filter:grayscale(1) contrast(1.08) brightness(1.18);opacity:.38;mix-blend-mode:luminosity}
-.holo{opacity:.96;mix-blend-mode:color}
+.base{filter:grayscale(1) contrast(1.04) brightness(1.08);opacity:.60;mix-blend-mode:luminosity}
+.silverWash{position:absolute;inset:0;background:linear-gradient(135deg,rgba(235,235,231,.78),rgba(135,138,142,.48) 44%,rgba(215,215,211,.55) 72%,rgba(110,113,118,.42));mix-blend-mode:color;opacity:.80;pointer-events:none}
+.material{position:absolute;inset:0;background-size:cover;mix-blend-mode:soft-light;opacity:.34;pointer-events:none}
+.micro{position:absolute;inset:0;background:repeating-linear-gradient(112deg,rgba(255,255,255,.05) 0 1px,rgba(0,0,0,.025) 1px 2px,transparent 2px 4px);mix-blend-mode:overlay;opacity:.22;pointer-events:none}
+.holo{opacity:.74;mix-blend-mode:color}
 
 @media(orientation:portrait){
-  #viewer{
-    position:absolute;width:100vh;height:100vw;
-    left:50%;top:50%;
-    transform:translate(-50%,-50%) rotate(90deg);
-  }
+  #viewer{position:absolute;width:100vh;height:100vw;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg)}
   .viewerFrame{
     grid-template-rows:32px minmax(0,1fr) 28px;
-    padding:
-      max(6px,env(safe-area-inset-left))
-      max(10px,env(safe-area-inset-top))
-      max(6px,env(safe-area-inset-right))
-      max(10px,env(safe-area-inset-bottom));
+    padding:max(6px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom));
   }
   .card{
     width:min(calc((100vh - 54px)/2),calc(100vw - 90px));
@@ -71,10 +55,6 @@ footer{margin-top:auto;font-size:10px;color:#999;letter-spacing:.08em}
 }
 @media(max-height:420px) and (orientation:landscape){
   .viewerFrame{grid-template-rows:30px minmax(0,1fr) 26px;gap:4px;padding-top:4px;padding-bottom:4px}
-  #viewer button{padding:5px 9px;font-size:8px}
-  .name b{font-size:10px}.name small,.bottom{font-size:8px}
-  .card{
-    width:min(calc((100vw - 48px)/2),calc(100vh - 76px));
-    height:min(calc((100vw - 48px)/2),calc(100vh - 76px));
-  }
+  #viewer button{padding:5px 9px;font-size:8px}.name b{font-size:10px}.name small,.bottom{font-size:8px}
+  .card{width:min(calc((100vw - 48px)/2),calc(100vh - 76px));height:min(calc((100vw - 48px)/2),calc(100vh - 76px))}
 }
