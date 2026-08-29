@@ -13,7 +13,7 @@ cards.forEach(card=>{
 
  // Stereoscopic hologram effects are additional layers; the original illustration stays untouched.
  const back=document.createElement('i'); back.className='depthBack';
- back.innerHTML='<b class="holoRing r1"></b><b class="holoRing r2"></b><b class="holoRing r3"></b><b class="holoArc"></b><b class="holoParticle p1"></b><b class="holoParticle p2"></b><b class="holoParticle p3"></b><b class="holoParticle p4"></b>';
+ back.innerHTML='<b class="holoField"></b>';
  card.append(back);
 
  specs.forEach(([n])=>{
@@ -28,11 +28,11 @@ cards.forEach(card=>{
  const micro=document.createElement('i'); micro.className='micro'; card.append(micro);
 
  const mid=document.createElement('i'); mid.className='depthMid';
- mid.innerHTML='<b class="holoRing r2"></b><b class="holoParticle p2"></b>';
+ mid.innerHTML='<b class="holoField mid"></b>';
  card.append(mid);
 
+ // The orb AND supporting hand move together as one foreground object.
  const orb=document.createElement('i'); orb.className='orbDepth';
- orb.innerHTML='<b class="orbDisc"></b><b class="orbShell"></b>';
  card.append(orb);
 });
 
@@ -112,19 +112,20 @@ function paint(t){
    const back=card.querySelector('.depthBack');
    const mid=card.querySelector('.depthMid');
    const orb=card.querySelector('.orbDepth');
-   back.style.transform=`translate(${eye*-3.2 + e*-2.0}px,${e*.55}px)`;
-   mid.style.transform=`translate(${eye*-1.5 + e*-1.0}px,${e*.30}px)`;
-   orb.style.transform=`translate(${eye*5.2 + e*3.2}px,${e*-.45}px)`;
-   back.style.opacity=(.34+Math.abs(e)*.10).toFixed(3);
-   mid.style.opacity=(.30+Math.abs(e)*.10).toFixed(3);
-   orb.style.opacity=(.70+Math.abs(e)*.12).toFixed(3);
+   back.style.transform=`translate(${eye*-4.2 + e*-2.6}px,${e*.55}px) scale(1.025)`;
+   mid.style.transform=`translate(${eye*-2.1 + e*-1.4}px,${e*.32}px) scale(1.015)`;
+   orb.style.transform=`translate(${eye*4.6 + e*2.5}px,${e*-.32}px) scale(1.004)`;
+   back.style.opacity=(.54+Math.abs(e)*.10).toFixed(3);
+   mid.style.opacity=(.42+Math.abs(e)*.08).toFixed(3);
+   orb.style.opacity='.96';
 
-   // Let the recorded 3D layers participate in the same rapid holographic colour response.
+   // Background is deliberately blurred like an optical recorded field, not crisp UI geometry.
    const fxHue=190 + q*300;
    const fx=hueRGB(fxHue,.88,.58);
-   back.style.filter=`drop-shadow(0 0 1px rgb(${fx[0]},${fx[1]},${fx[2]})) hue-rotate(${q*95}deg)`;
-   mid.style.filter=`drop-shadow(0 0 1px rgb(${fx[0]},${fx[1]},${fx[2]})) hue-rotate(${-q*125}deg)`;
-   orb.style.filter=`hue-rotate(${q*150}deg) saturate(1.45)`;
+   back.style.filter=`hue-rotate(${q*120}deg) saturate(1.35)`;
+   mid.style.filter=`hue-rotate(${-q*155}deg) saturate(1.45)`;
+   // Foreground hand+orb keeps the approved drawing, with only material colour response added.
+   orb.style.filter=`hue-rotate(${q*72}deg) saturate(1.12)`;
  });
 }
 function animate(){
