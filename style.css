@@ -1,5 +1,5 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#efefed;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif}
 button{font:inherit}#shell{position:fixed;inset:0}.screen{display:none;width:100%;height:100%}.screen.active{display:flex}
 
 #menu{flex-direction:column;background:#efefed;color:#171719;padding:max(28px,env(safe-area-inset-top)) 22px max(18px,env(safe-area-inset-bottom))}
@@ -15,7 +15,11 @@ footer{margin-top:auto;font-size:10px;color:#999;letter-spacing:.08em}
   display:grid;
   grid-template-rows:34px minmax(0,1fr) 30px;
   gap:6px;
-  padding:max(6px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+  padding:
+    max(8px,env(safe-area-inset-top))
+    max(18px,calc(env(safe-area-inset-right) + 8px))
+    max(8px,env(safe-area-inset-bottom))
+    max(18px,calc(env(safe-area-inset-left) + 8px));
   overflow:hidden;
 }
 .bar{min-width:0;display:grid;align-items:center;gap:8px}
@@ -46,7 +50,11 @@ footer{margin-top:auto;font-size:10px;color:#999;letter-spacing:.08em}
   #viewer{position:absolute;width:100vh;height:100vw;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg)}
   .viewerFrame{
     grid-template-rows:32px minmax(0,1fr) 28px;
-    padding:max(6px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom));
+    padding:
+      max(8px,env(safe-area-inset-left))
+      max(18px,calc(env(safe-area-inset-top) + 8px))
+      max(8px,env(safe-area-inset-right))
+      max(18px,calc(env(safe-area-inset-bottom) + 8px));
   }
   .card{
     width:min(calc((100vh - 54px)/2),calc(100vw - 90px));
@@ -58,3 +66,7 @@ footer{margin-top:auto;font-size:10px;color:#999;letter-spacing:.08em}
   #viewer button{padding:5px 9px;font-size:8px}.name b{font-size:10px}.name small,.bottom{font-size:8px}
   .card{width:min(calc((100vw - 48px)/2),calc(100vh - 76px));height:min(calc((100vw - 48px)/2),calc(100vh - 76px))}
 }
+
+
+.top button:first-child{margin-left:2px}
+.top button:last-child{margin-right:2px}

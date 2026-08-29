@@ -14,12 +14,19 @@ cards.forEach(card=>{
  const micro=document.createElement('i'); micro.className='micro'; card.append(micro);
 });
 
-const menu=document.querySelector('#menu'),viewer=document.querySelector('#viewer'),pair=document.querySelector('#pair'),status=document.querySelector('#status');
+const menu=document.querySelector('#menu'),
+      viewer=document.querySelector('#viewer'),
+      pair=document.querySelector('#pair'),
+      status=document.querySelector('#status'),
+      openMira=document.getElementById('openMira'),
+      backBtn=document.getElementById('back'),
+      startBtn=document.getElementById('start'),
+      resetBtn=document.getElementById('reset');
 let active=false,bB=null,bG=null,drag=false;
 let target=0,current=0,raf=null;
 
 const show=v=>{menu.classList.toggle('active',!v);viewer.classList.toggle('active',v)};
-openMira.onclick=()=>show(true);back.onclick=()=>show(false);
+openMira.addEventListener('click',()=>show(true));backBtn.addEventListener('click',()=>show(false));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const smoothstep=t=>t*t*(3-2*t);
 
@@ -69,17 +76,17 @@ function orient(e){
  if(matchMedia('(orientation:portrait)').matches){let q=x;x=y;y=-q}
  setTarget(x+y*.18);
 }
-start.onclick=async()=>{
+startBtn.addEventListener('click',async()=>{
  try{
   if(typeof DeviceOrientationEvent==='undefined'){status.textContent='センサー非対応 / ドラッグ操作可';return}
   if(typeof DeviceOrientationEvent.requestPermission==='function'&&await DeviceOrientationEvent.requestPermission()!=='granted'){
    status.textContent='センサー許可なし / ドラッグ操作可';return
   }
   bB=bG=null;active=true;addEventListener('deviceorientation',orient,true);
-  start.textContent='TILT ACTIVE';status.textContent='現在角度を基準に設定';
+  startBtn.textContent='TILT ACTIVE';status.textContent='現在角度を基準に設定';
  }catch(e){status.textContent='センサーを開始できません'}
-};
-reset.onclick=()=>{bB=bG=null;setTarget(0)};
+});
+resetBtn.addEventListener('click',()=>{bB=bG=null;setTarget(0)});
 function pointer(e){
  const r=pair.getBoundingClientRect();
  setTarget(((e.clientX-r.left)/r.width-.5)*2);
