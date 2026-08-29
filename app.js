@@ -10,12 +10,6 @@ cards.forEach(card=>{
  const base=new Image(); base.src='./mira-silver-base.jpg'; base.className='layer base'; card.append(base);
  const sw=document.createElement('i'); sw.className='silverWash'; card.append(sw);
  const bg=document.createElement('i'); bg.className='bgHolo'; card.append(bg);
-
- // Stereoscopic hologram effects are additional layers; the original illustration stays untouched.
- const back=document.createElement('i'); back.className='depthBack';
- back.innerHTML='<b class="holoField"></b>';
- card.append(back);
-
  specs.forEach(([n])=>{
    const region=document.createElement('i');
    region.className='holo';
@@ -26,14 +20,6 @@ cards.forEach(card=>{
  });
  const mat=document.createElement('i'); mat.className='material'; mat.style.backgroundImage=`url("${MATERIAL}")`; card.append(mat);
  const micro=document.createElement('i'); micro.className='micro'; card.append(micro);
-
- const mid=document.createElement('i'); mid.className='depthMid';
- mid.innerHTML='<b class="holoField mid"></b>';
- card.append(mid);
-
- // The orb AND supporting hand move together as one foreground object.
- const orb=document.createElement('i'); orb.className='orbDepth';
- card.append(orb);
 });
 
 const menu=document.querySelector('#menu'),
@@ -105,27 +91,6 @@ function paint(t){
    const mat=card.querySelector('.material');
    mat.style.transform=`translate(${(e+stereoPhase*.35)*1.8}px,${e*.8}px) scale(1.012)`;
    mat.style.opacity=(.34+Math.abs(e)*.07).toFixed(3);
-
-   // Depth is encoded mainly as binocular disparity. Background moves behind the sticker plane,
-   // the middle layer is shallower, and the ? orb floats clearly in front.
-   const eye=eyeIndex===0 ? -1 : 1;
-   const back=card.querySelector('.depthBack');
-   const mid=card.querySelector('.depthMid');
-   const orb=card.querySelector('.orbDepth');
-   back.style.transform=`translate(${eye*-4.2 + e*-2.6}px,${e*.55}px) scale(1.025)`;
-   mid.style.transform=`translate(${eye*-2.1 + e*-1.4}px,${e*.32}px) scale(1.015)`;
-   orb.style.transform=`translate(${eye*4.6 + e*2.5}px,${e*-.32}px) scale(1.004)`;
-   back.style.opacity=(.54+Math.abs(e)*.10).toFixed(3);
-   mid.style.opacity=(.42+Math.abs(e)*.08).toFixed(3);
-   orb.style.opacity='.96';
-
-   // Background is deliberately blurred like an optical recorded field, not crisp UI geometry.
-   const fxHue=190 + q*300;
-   const fx=hueRGB(fxHue,.88,.58);
-   back.style.filter=`hue-rotate(${q*120}deg) saturate(1.35)`;
-   mid.style.filter=`hue-rotate(${-q*155}deg) saturate(1.45)`;
-   // Foreground hand+orb keeps the approved drawing, with only material colour response added.
-   orb.style.filter=`hue-rotate(${q*72}deg) saturate(1.12)`;
  });
 }
 function animate(){
