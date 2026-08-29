@@ -6,7 +6,7 @@ const specs=[
  ['04_gold_yellow',52,1.08,.72],['05_orange_red',12,.96,.74],['06_skin_tan',34,.72,.58],['07_silver_white',205,.58,.35]
 ];
 const cards=[...document.querySelectorAll('.card')];
-cards.forEach(card=>{
+cards.forEach((card,eyeIndex)=>{
  const base=new Image(); base.src='./mira-silver-base.jpg'; base.className='layer base'; card.append(base);
  const sw=document.createElement('i'); sw.className='silverWash'; card.append(sw);
  const bg=document.createElement('i'); bg.className='bgHolo'; card.append(bg);
