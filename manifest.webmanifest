@@ -3,7 +3,7 @@
   "short_name": "HOLO LAB",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#efefed",
+  "background_color": "#08080a",
   "theme_color": "#efefed",
   "orientation": "any",
   "icons": [

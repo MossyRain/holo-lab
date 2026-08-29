@@ -9,6 +9,7 @@ const cards=[...document.querySelectorAll('.card')];
 cards.forEach(card=>{
  const base=new Image(); base.src='./mira-silver-base.jpg'; base.className='layer base'; card.append(base);
  const sw=document.createElement('i'); sw.className='silverWash'; card.append(sw);
+ const bg=document.createElement('i'); bg.className='bgHolo'; card.append(bg);
  specs.forEach(([n])=>{
    const region=document.createElement('i');
    region.className='holo';
@@ -32,7 +33,13 @@ const menu=document.querySelector('#menu'),
 let active=false,bB=null,bG=null,drag=false;
 let target=0,current=0,raf=null;
 
-const show=v=>{menu.classList.toggle('active',!v);viewer.classList.toggle('active',v)};
+const themeMeta=document.querySelector('meta[name="theme-color"]');
+const show=v=>{
+ menu.classList.toggle('active',!v);viewer.classList.toggle('active',v);
+ document.documentElement.style.background=v?'#08080a':'#efefed';
+ document.body.style.background=v?'#08080a':'#efefed';
+ if(themeMeta)themeMeta.setAttribute('content',v?'#08080a':'#efefed');
+};
 openMira.addEventListener('click',()=>show(true));backBtn.addEventListener('click',()=>show(false));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const smoothstep=t=>t*t*(3-2*t);
@@ -56,13 +63,28 @@ function paint(t){
      const local=e + stereoPhase;
      const wobble=Math.sin((local*1.55 + base/360)*Math.PI)*13;
      const hue=base + local*138*rate + wobble;
-     const light=n==='01_dark_lines' ? .31 : (n==='07_silver_white' ? .50 : .43);
-     const s=n==='01_dark_lines' ? .34 : sat*.78;
+     // Outlines are themselves holographic material: they can become bright and strongly coloured.
+     const linePulse=(Math.sin((local*2.1 + base/180)*Math.PI)+1)/2;
+     const light=n==='01_dark_lines' ? (.38 + linePulse*.24) : (n==='07_silver_white' ? .50 : .43);
+     const s=n==='01_dark_lines' ? .78 : sat*.78;
      const [r,g,b]=hueRGB(hue,s,light);
      const el=card.querySelector(`[data-mask="${n}"]`);
      el.style.backgroundColor=`rgb(${r},${g},${b})`;
-     el.style.opacity=n==='07_silver_white' ? '.19' : (n==='01_dark_lines' ? '.34' : '.48');
+     el.style.opacity=n==='07_silver_white' ? '.19' : (n==='01_dark_lines' ? '.72' : '.48');
    });
+   // The exposed silver background is holographic too. Two broad, muted colour fields
+   // move continuously with tilt and have the same left/right phase offset.
+   const bg=card.querySelector('.bgHolo');
+   const bh1=205 + (e+stereoPhase)*118;
+   const bh2=292 - (e+stereoPhase)*104;
+   const c1=hueRGB(bh1,.48,.43), c2=hueRGB(bh2,.42,.39);
+   const pos=50 + (e+stereoPhase)*24;
+   bg.style.background=`linear-gradient(118deg,
+     rgb(${c1[0]},${c1[1]},${c1[2]}) 0%,
+     rgba(${c1[0]},${c1[1]},${c1[2]},.42) ${Math.max(12,pos-18)}%,
+     rgb(${c2[0]},${c2[1]},${c2[2]}) ${Math.min(88,pos+18)}%,
+     rgb(${c1[0]},${c1[1]},${c1[2]}) 100%)`;
+   bg.style.opacity=(.28+Math.abs(e)*.12).toFixed(3);
    const mat=card.querySelector('.material');
    mat.style.transform=`translate(${(e+stereoPhase*.35)*1.8}px,${e*.8}px) scale(1.012)`;
    mat.style.opacity=(.34+Math.abs(e)*.07).toFixed(3);
