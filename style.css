@@ -83,3 +83,6 @@ body{background:#08080a!important}
 .cards{gap:0!important;column-gap:0!important;row-gap:0!important}
 .card{margin:0!important;outline:0!important}
 .card+ .card{border-left-color:#08080a!important;border-top-color:#08080a!important}
+
+/* v1.7: approved stereo foreground only */
+.orbHand3d{position:absolute;left:52.5%;top:47%;width:46%;height:auto;z-index:20;pointer-events:none;transform-origin:50% 55%;object-fit:contain;filter:saturate(1.08)}

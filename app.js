@@ -20,6 +20,8 @@ cards.forEach(card=>{
  });
  const mat=document.createElement('i'); mat.className='material'; mat.style.backgroundImage=`url("${MATERIAL}")`; card.append(mat);
  const micro=document.createElement('i'); micro.className='micro'; card.append(micro);
+ const oh=document.createElement('img'); oh.className='orbHand3d';
+ oh.src=eyeIndex===0?'./orb-hand-1.png':'./orb-hand-2.png'; oh.alt=''; card.append(oh);
 });
 
 const menu=document.querySelector('#menu'),
@@ -91,6 +93,8 @@ function paint(t){
    const mat=card.querySelector('.material');
    mat.style.transform=`translate(${(e+stereoPhase*.35)*1.8}px,${e*.8}px) scale(1.012)`;
    mat.style.opacity=(.34+Math.abs(e)*.07).toFixed(3);
+   const oh=card.querySelector('.orbHand3d');
+   if(oh){const eye=eyeIndex===0?-1:1;oh.style.transform=`translate(${eye*1.4+e*2.2}px,${e*-.28}px) scale(1.012)`;oh.style.filter=`hue-rotate(${e*22}deg) saturate(1.10)`;}
  });
 }
 function animate(){
