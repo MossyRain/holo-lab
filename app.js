@@ -48,21 +48,24 @@ function hueRGB(h,s,l){
 function paint(t){
  t=clamp(t,-1,1);
  const e=Math.sign(t)*smoothstep(Math.abs(t));
- cards.forEach(card=>{
+ cards.forEach((card,eyeIndex)=>{
+   // A real hologram does not deliver exactly the same wavelength mix to both eyes.
+   // Give the left/right images a small phase difference rather than a fixed tint.
+   const stereoPhase=eyeIndex===0 ? -0.11 : 0.11;
    specs.forEach(([n,base,rate,sat])=>{
-     // Each painted region follows its own continuous phase, but silver always remains underneath.
-     const wobble=Math.sin((e*1.55 + base/360)*Math.PI)*13;
-     const hue=base + e*138*rate + wobble;
-     const light=n==='01_dark_lines' ? .40 : (n==='07_silver_white' ? .61 : .53);
-     const s=n==='01_dark_lines' ? .40 : sat;
+     const local=e + stereoPhase;
+     const wobble=Math.sin((local*1.55 + base/360)*Math.PI)*13;
+     const hue=base + local*138*rate + wobble;
+     const light=n==='01_dark_lines' ? .31 : (n==='07_silver_white' ? .50 : .43);
+     const s=n==='01_dark_lines' ? .34 : sat*.78;
      const [r,g,b]=hueRGB(hue,s,light);
      const el=card.querySelector(`[data-mask="${n}"]`);
      el.style.backgroundColor=`rgb(${r},${g},${b})`;
-     el.style.opacity=n==='07_silver_white' ? '.25' : (n==='01_dark_lines' ? '.40' : '.56');
+     el.style.opacity=n==='07_silver_white' ? '.19' : (n==='01_dark_lines' ? '.34' : '.48');
    });
    const mat=card.querySelector('.material');
-   mat.style.transform=`translate(${e*1.8}px,${e*.8}px) scale(1.012)`;
-   mat.style.opacity=(.31+Math.abs(e)*.08).toFixed(3);
+   mat.style.transform=`translate(${(e+stereoPhase*.35)*1.8}px,${e*.8}px) scale(1.012)`;
+   mat.style.opacity=(.34+Math.abs(e)*.07).toFixed(3);
  });
 }
 function animate(){
@@ -100,5 +103,18 @@ pair.onpointerdown=e=>{drag=true;pair.setPointerCapture(e.pointerId);pointer(e)}
 pair.onpointermove=e=>{if(drag)pointer(e)};
 pair.onpointerup=pair.onpointercancel=()=>drag=false;
 
-if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+if('serviceWorker'in navigator){
+ addEventListener('load',async()=>{
+   try{
+     // v1.1 development mode: update the cleanup worker, then remove stale registrations/caches.
+     await navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});
+     const regs=await navigator.serviceWorker.getRegistrations();
+     setTimeout(()=>regs.forEach(r=>r.unregister()),1200);
+     if('caches'in window){
+       const keys=await caches.keys();
+       await Promise.all(keys.map(k=>caches.delete(k)));
+     }
+   }catch(e){}
+ });
+}
 })();

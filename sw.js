@@ -1,1 +1,12 @@
-const C='holo-lab-v10',A=["./", "./index.html", "./style.css", "./app.js", "./mira-jii.jpg","./mira-silver-base.jpg", "./manifest.webmanifest", "./icon-180.png", "./icon-512.png"];self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(A)));self.skipWaiting()});self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x))))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
+self.addEventListener('install',event=>{
+  self.skipWaiting();
+});
+self.addEventListener('activate',event=>{
+  event.waitUntil((async()=>{
+    const keys=await caches.keys();
+    await Promise.all(keys.map(k=>caches.delete(k)));
+    await self.clients.claim();
+    await self.registration.unregister();
+  })());
+});
+self.addEventListener('fetch',()=>{});
