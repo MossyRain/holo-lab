@@ -77,3 +77,52 @@ footer{margin-top:auto;font-size:10px;color:#999;letter-spacing:.08em}
 html{background:#08080a!important}
 body{background:#08080a!important}
 #shell{background:#08080a!important}
+
+/* v1.4 stereoscopic hologram depth layers */
+.depthBack,.depthMid,.orbDepth{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.depthBack{z-index:1}
+.depthMid{z-index:3}
+.orbDepth{z-index:8}
+
+/* Recorded-hologram-like geometry: deliberately sparse and translucent. */
+.holoRing,.holoArc,.holoParticle{
+ position:absolute;box-sizing:border-box;mix-blend-mode:screen;
+}
+.holoRing{
+ border:1.2px solid rgba(180,245,255,.52);
+ border-radius:50%;
+ box-shadow:0 0 5px rgba(190,220,255,.18);
+}
+.holoRing.r1{width:48%;height:19%;left:27%;top:65%;transform:rotate(-8deg)}
+.holoRing.r2{width:36%;height:14%;left:34%;top:69%;transform:rotate(13deg)}
+.holoRing.r3{width:24%;height:9%;left:40%;top:73%;transform:rotate(-18deg)}
+.holoArc{
+ width:23%;height:23%;left:7%;top:42%;
+ border:1px solid rgba(220,190,255,.42);border-left-color:transparent;border-bottom-color:transparent;
+ border-radius:50%;transform:rotate(24deg)
+}
+.holoParticle{
+ width:5px;height:5px;border:1px solid rgba(190,255,235,.65);transform:rotate(45deg)
+}
+.holoParticle.p1{left:15%;top:32%}.holoParticle.p2{left:78%;top:35%;width:7px;height:7px}
+.holoParticle.p3{left:19%;top:71%;width:4px;height:4px}.holoParticle.p4{left:83%;top:68%;width:5px;height:5px}
+
+/* ? orb: duplicate only the original orb region and give it independent binocular disparity.
+   The image itself is not redrawn. */
+.orbDisc{
+ position:absolute;left:70.8%;top:47.0%;width:18.2%;aspect-ratio:1/1;
+ border-radius:50%;
+ background-image:url("./mira-silver-base.jpg");
+ background-size:549.45% 549.45%;
+ background-position:86.55% 57.47%;
+ background-repeat:no-repeat;
+ mix-blend-mode:screen;
+ opacity:.68;
+ box-shadow:inset 0 0 0 1px rgba(235,245,255,.28),0 0 7px rgba(200,220,255,.18);
+}
+.orbShell{
+ position:absolute;left:70.8%;top:47.0%;width:18.2%;aspect-ratio:1/1;border-radius:50%;
+ border:1.5px solid rgba(220,245,255,.58);
+ box-shadow:inset -8px -5px 12px rgba(80,40,150,.16),inset 7px 5px 10px rgba(220,255,255,.12);
+ mix-blend-mode:screen;
+}

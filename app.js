@@ -10,6 +10,12 @@ cards.forEach(card=>{
  const base=new Image(); base.src='./mira-silver-base.jpg'; base.className='layer base'; card.append(base);
  const sw=document.createElement('i'); sw.className='silverWash'; card.append(sw);
  const bg=document.createElement('i'); bg.className='bgHolo'; card.append(bg);
+
+ // Stereoscopic hologram effects are additional layers; the original illustration stays untouched.
+ const back=document.createElement('i'); back.className='depthBack';
+ back.innerHTML='<b class="holoRing r1"></b><b class="holoRing r2"></b><b class="holoRing r3"></b><b class="holoArc"></b><b class="holoParticle p1"></b><b class="holoParticle p2"></b><b class="holoParticle p3"></b><b class="holoParticle p4"></b>';
+ card.append(back);
+
  specs.forEach(([n])=>{
    const region=document.createElement('i');
    region.className='holo';
@@ -20,6 +26,14 @@ cards.forEach(card=>{
  });
  const mat=document.createElement('i'); mat.className='material'; mat.style.backgroundImage=`url("${MATERIAL}")`; card.append(mat);
  const micro=document.createElement('i'); micro.className='micro'; card.append(micro);
+
+ const mid=document.createElement('i'); mid.className='depthMid';
+ mid.innerHTML='<b class="holoRing r2"></b><b class="holoParticle p2"></b>';
+ card.append(mid);
+
+ const orb=document.createElement('i'); orb.className='orbDepth';
+ orb.innerHTML='<b class="orbDisc"></b><b class="orbShell"></b>';
+ card.append(orb);
 });
 
 const menu=document.querySelector('#menu'),
@@ -91,6 +105,26 @@ function paint(t){
    const mat=card.querySelector('.material');
    mat.style.transform=`translate(${(e+stereoPhase*.35)*1.8}px,${e*.8}px) scale(1.012)`;
    mat.style.opacity=(.34+Math.abs(e)*.07).toFixed(3);
+
+   // Depth is encoded mainly as binocular disparity. Background moves behind the sticker plane,
+   // the middle layer is shallower, and the ? orb floats clearly in front.
+   const eye=eyeIndex===0 ? -1 : 1;
+   const back=card.querySelector('.depthBack');
+   const mid=card.querySelector('.depthMid');
+   const orb=card.querySelector('.orbDepth');
+   back.style.transform=`translate(${eye*-3.2 + e*-2.0}px,${e*.55}px)`;
+   mid.style.transform=`translate(${eye*-1.5 + e*-1.0}px,${e*.30}px)`;
+   orb.style.transform=`translate(${eye*5.2 + e*3.2}px,${e*-.45}px)`;
+   back.style.opacity=(.34+Math.abs(e)*.10).toFixed(3);
+   mid.style.opacity=(.30+Math.abs(e)*.10).toFixed(3);
+   orb.style.opacity=(.70+Math.abs(e)*.12).toFixed(3);
+
+   // Let the recorded 3D layers participate in the same rapid holographic colour response.
+   const fxHue=190 + q*300;
+   const fx=hueRGB(fxHue,.88,.58);
+   back.style.filter=`drop-shadow(0 0 1px rgb(${fx[0]},${fx[1]},${fx[2]})) hue-rotate(${q*95}deg)`;
+   mid.style.filter=`drop-shadow(0 0 1px rgb(${fx[0]},${fx[1]},${fx[2]})) hue-rotate(${-q*125}deg)`;
+   orb.style.filter=`hue-rotate(${q*150}deg) saturate(1.45)`;
  });
 }
 function animate(){
