@@ -7,9 +7,16 @@ const specs=[
 ];
 const cards=[...document.querySelectorAll('.card')];
 cards.forEach(card=>{
- const base=new Image(); base.src='./mira-jii.jpg'; base.className='layer base'; card.append(base);
+ const base=new Image(); base.src='./mira-silver-base.jpg'; base.className='layer base'; card.append(base);
  const sw=document.createElement('i'); sw.className='silverWash'; card.append(sw);
- specs.forEach(([n])=>{const im=new Image();im.src=MASKS[n];im.className='layer holo';im.dataset.mask=n;card.append(im)});
+ specs.forEach(([n])=>{
+   const region=document.createElement('i');
+   region.className='holo';
+   region.dataset.mask=n;
+   region.style.webkitMaskImage=`url("${MASKS[n]}")`;
+   region.style.maskImage=`url("${MASKS[n]}")`;
+   card.append(region);
+ });
  const mat=document.createElement('i'); mat.className='material'; mat.style.backgroundImage=`url("${MATERIAL}")`; card.append(mat);
  const micro=document.createElement('i'); micro.className='micro'; card.append(micro);
 });
@@ -40,24 +47,22 @@ function hueRGB(h,s,l){
 }
 function paint(t){
  t=clamp(t,-1,1);
- cards.forEach(card=>specs.forEach(([n,base,rate,sat])=>{
-   // eased, continuous angular response with lower saturation so silver remains visible
-   const e=Math.sign(t)*smoothstep(Math.abs(t));
-   const hue=base+e*120*rate;
-   const [r,g,b]=hueRGB(hue,sat,.52);
-   const el=card.querySelector(`[data-mask="${n}"]`);
-   el.style.filter='none';
-   el.style.background='none';
-   el.style.opacity=n==='07_silver_white'?'.42':'.68';
-   el.style.mixBlendMode='color';
-   // mask image itself is white; tint via drop-shadow + brightness trick
-   el.style.filter=`brightness(0) saturate(100%) invert(1) drop-shadow(0 0 0 rgb(${r},${g},${b}))`;
-   // material reacts subtly to tilt independently from color
- }));
+ const e=Math.sign(t)*smoothstep(Math.abs(t));
  cards.forEach(card=>{
+   specs.forEach(([n,base,rate,sat])=>{
+     // Each painted region follows its own continuous phase, but silver always remains underneath.
+     const wobble=Math.sin((e*1.55 + base/360)*Math.PI)*13;
+     const hue=base + e*138*rate + wobble;
+     const light=n==='01_dark_lines' ? .40 : (n==='07_silver_white' ? .61 : .53);
+     const s=n==='01_dark_lines' ? .40 : sat;
+     const [r,g,b]=hueRGB(hue,s,light);
+     const el=card.querySelector(`[data-mask="${n}"]`);
+     el.style.backgroundColor=`rgb(${r},${g},${b})`;
+     el.style.opacity=n==='07_silver_white' ? '.25' : (n==='01_dark_lines' ? '.40' : '.56');
+   });
    const mat=card.querySelector('.material');
-   mat.style.transform=`translate(${t*1.5}px,${t*.7}px) scale(1.01)`;
-   mat.style.opacity=(.30+Math.abs(t)*.08).toFixed(3);
+   mat.style.transform=`translate(${e*1.8}px,${e*.8}px) scale(1.012)`;
+   mat.style.opacity=(.31+Math.abs(e)*.08).toFixed(3);
  });
 }
 function animate(){
