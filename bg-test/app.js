@@ -6,20 +6,22 @@ const specs=[
  ['04_gold_yellow',52,1.08,.72],['05_orange_red',12,.96,.74],['06_skin_tan',34,.72,.58],['07_silver_white',205,.58,.35]
 ];
 const cards=[...document.querySelectorAll('.card')];
-
-// BG TEST 0.2 layer order (back -> front)
-// 1. deep star field
-// 2. name band
-// 3. moving holo stars + Great stellated 120-cell study
-// 4. character body
-// For this test, band/body are separated at runtime from the same source JPG.
-// When final transparent assets exist, these canvases can be replaced directly.
 cards.forEach(card=>{
-  card.innerHTML='';
-  const deep=document.createElement('canvas'); deep.className='skyCanvas deepSky'; deep.style.zIndex='1'; card.append(deep);
-  const band=document.createElement('canvas'); band.className='skyCanvas bandCanvas'; band.style.zIndex='2'; band.style.background='transparent'; card.append(band);
-  const holo=document.createElement('canvas'); holo.className='skyCanvas holoCanvas'; holo.style.zIndex='3'; holo.style.background='transparent'; card.append(holo);
-  const body=document.createElement('canvas'); body.className='skyCanvas charCanvas'; body.style.zIndex='4'; body.style.background='transparent'; body.style.opacity='.68'; card.append(body);
+ const base=new Image(); base.src='./mira-silver-base.jpg'; base.className='layer base'; card.append(base);
+ const sw=document.createElement('i'); sw.className='silverWash'; card.append(sw);
+ const bg=document.createElement('i'); bg.className='bgHolo'; card.append(bg);
+ specs.forEach(([n])=>{
+   const region=document.createElement('i');
+   region.className='holo';
+   region.dataset.mask=n;
+   region.style.webkitMaskImage=`url("${MASKS[n]}")`;
+   region.style.maskImage=`url("${MASKS[n]}")`;
+   card.append(region);
+ });
+ const mat=document.createElement('i'); mat.className='material'; mat.style.backgroundImage=`url("${MATERIAL}")`; card.append(mat);
+ const micro=document.createElement('i'); micro.className='micro'; card.append(micro);
+ const sky=document.createElement('canvas'); sky.className='skyCanvas'; card.append(sky);
+ const mask=new Image(); mask.src='./mira-jii.jpg'; mask.className='charMask'; card.append(mask);
 });
 
 const menu=document.querySelector('#menu'),
@@ -44,145 +46,262 @@ const show=v=>{
 openMira.addEventListener('click',()=>show(true));backBtn.addEventListener('click',()=>show(false));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const smoothstep=t=>t*t*(3-2*t);
+
+function hueRGB(h,s,l){
+ h=((h%360)+360)%360/360;
+ const c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h*6)%2-1)), m=l-c/2;
+ let r=0,g=0,b=0,k=h*6;
+ if(k<1)[r,g,b]=[c,x,0]; else if(k<2)[r,g,b]=[x,c,0]; else if(k<3)[r,g,b]=[0,c,x];
+ else if(k<4)[r,g,b]=[0,x,c]; else if(k<5)[r,g,b]=[x,0,c]; else [r,g,b]=[c,0,x];
+ return [Math.round((r+m)*255),Math.round((g+m)*255),Math.round((b+m)*255)];
+}
+
 const TAU=Math.PI*2;
 
-// ---------- source image -> separate band/body canvases ----------
-const sourceImg=new Image();
-sourceImg.src='./mira-jii.jpg';
-let sourceReady=false;
-sourceImg.onload=()=>{sourceReady=true; paint(current)};
+// Full-field star map.  Stars are distributed over a disc large enough to
+// cover the entire sticker while rotating around the name-band arc centre.
+const STAR_SEED=(()=>{
+  const a=[]; let seed=91731;
+  const rnd=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+  for(let i=0;i<260;i++){
+    a.push({
+      r:Math.sqrt(rnd()),
+      a:rnd()*TAU,
+      z:rnd(),
+      b:.28+rnd()*.72,
+      sz:.38+rnd()*1.18
+    });
+  }
+  return a;
+})();
 
-function prepCanvas(cv,rect){
- const dpr=Math.min(devicePixelRatio||1,2),w=Math.max(2,Math.round(rect.width*dpr)),h=Math.max(2,Math.round(rect.height*dpr));
- if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
- const g=cv.getContext('2d',{willReadFrequently:true});g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,rect.width,rect.height);
- return {g,dpr,W:rect.width,H:rect.height};
-}
-function eraseWhiteAndOutside(g,W,H,mode){
- // Work in CSS-pixel space after the source has been drawn. White background is made transparent.
- const dpr=Math.min(devicePixelRatio||1,2),im=g.getImageData(0,0,Math.round(W*dpr),Math.round(H*dpr)),a=im.data,ww=im.width,hh=im.height;
- for(let y=0;y<hh;y++){
-   const yn=y/hh;
-   for(let x=0;x<ww;x++){
-     const i=(y*ww+x)*4,r=a[i],gg=a[i+1],b=a[i+2];
-     const white=(r>242&&gg>242&&b>242)||(r+gg+b>744);
-     let cut=white;
-     if(mode==='band') cut ||= yn>.315;
-     // The body begins below the title. This deliberately keeps the halo/head while removing almost all title pixels.
-     if(mode==='body'){
-       if(yn<.245) cut=true;
-       else if(yn<.315){
-         // In the overlap zone remove very dark title-band pixels and gold border pixels near the outer top arc.
-         const xn=x/ww;
-         const dark=r<70&&gg<70&&b<70;
-         const gold=r>155&&gg>105&&b<45&&Math.abs(r-gg)>35;
-         const outer=(xn<.27||xn>.73||yn<.285);
-         if(dark || (gold&&outer)) cut=true;
-       }
-     }
-     if(cut)a[i+3]=0;
-   }
- }
- g.putImageData(im,0,0);
-}
-function drawSourceLayers(card){
- if(!sourceReady)return;
- const rect=card.getBoundingClientRect();if(!rect.width)return;
- for(const [sel,mode] of [['.bandCanvas','band'],['.charCanvas','body']]){
-   const cv=card.querySelector(sel),{g,W,H}=prepCanvas(cv,rect);
-   g.drawImage(sourceImg,0,0,W,H);
-   eraseWhiteAndOutside(g,W,H,mode);
- }
+// Regular 16-cell (正八胞体): the eight vertices ±e1 … ±e4.
+// Every vertex is joined to every vertex except itself and its antipode.
+const CELL16_VERT=[
+  [ 1,0,0,0],[-1,0,0,0],
+  [0, 1,0,0],[0,-1,0,0],
+  [0,0, 1,0],[0,0,-1,0],
+  [0,0,0, 1],[0,0,0,-1]
+];
+const CELL16_EDGES=[];
+for(let i=0;i<CELL16_VERT.length;i++){
+  for(let j=i+1;j<CELL16_VERT.length;j++){
+    const dot=CELL16_VERT[i][0]*CELL16_VERT[j][0]
+             +CELL16_VERT[i][1]*CELL16_VERT[j][1]
+             +CELL16_VERT[i][2]*CELL16_VERT[j][2]
+             +CELL16_VERT[i][3]*CELL16_VERT[j][3];
+    if(dot===0) CELL16_EDGES.push([i,j]);
+  }
 }
 
-// ---------- celestial motion: follows the title-band arc ----------
-const STAR_SEED=(()=>{let a=[],s=91731;const rnd=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);for(let i=0;i<185;i++)a.push({u:rnd(),lane:rnd(),b:.35+rnd()*.65,sz:.42+rnd()*1.18,h:rnd()});return a})();
+function rot2(v,a,b,th){
+  const c=Math.cos(th),s=Math.sin(th),x=v[a],y=v[b];
+  v[a]=x*c-y*s; v[b]=x*s+y*c;
+}
 
-// 120 H4 vertices: the vertex arrangement shared by the Schläfli–Hess family.
-// We use the stellated 720-edge distance class to render a Great stellated 120-cell wire study.
-const PHI=(1+Math.sqrt(5))/2;
-function permParity(p){let inv=0;for(let i=0;i<p.length;i++)for(let j=i+1;j<p.length;j++)if(p[i]>p[j])inv++;return inv&1}
-function permutations(a){const out=[];function rec(cur,rest){if(!rest.length){out.push(cur);return}for(let i=0;i<rest.length;i++)rec(cur.concat(rest[i]),rest.slice(0,i).concat(rest.slice(i+1)));}rec([],a);return out}
-function buildH4(){
- const v=[];
- for(let axis=0;axis<4;axis++)for(const sg of [-1,1]){const q=[0,0,0,0];q[axis]=2*sg;v.push(q)}
- for(const a of [-1,1])for(const b of [-1,1])for(const c of [-1,1])for(const d of [-1,1])v.push([a,b,c,d]);
- const base=[0,1/PHI,1,PHI],ps=permutations([0,1,2,3]).filter(p=>permParity(p)===0);
- for(const p of ps){const raw=p.map(i=>base[i]),nz=raw.map((x,i)=>x?i:-1).filter(i=>i>=0);for(let bits=0;bits<8;bits++){const q=raw.slice();nz.forEach((idx,k)=>q[idx]*=(bits>>k)&1?1:-1);v.push(q)}}
- return v;
-}
-const GSP_VERT=buildH4();
-const GSP_EDGES=[];
-const GSP_D2=10.47213595; // one of the H4 720-edge stellated chord classes; gives the characteristic intersecting star projection
-for(let i=0;i<GSP_VERT.length;i++)for(let j=i+1;j<GSP_VERT.length;j++){
- let d=0;for(let k=0;k<4;k++){const z=GSP_VERT[i][k]-GSP_VERT[j][k];d+=z*z}
- if(Math.abs(d-GSP_D2)<1e-5)GSP_EDGES.push([i,j]);
-}
-function rot2(v,a,b,th){const c=Math.cos(th),s=Math.sin(th),x=v[a],y=v[b];v[a]=x*c-y*s;v[b]=x*s+y*c}
+function drawSky(card,eye,t){
+  const cv=card.querySelector('.skyCanvas'),
+        dpr=Math.min(devicePixelRatio||1,2),
+        rect=card.getBoundingClientRect();
+  if(!rect.width)return;
 
-function arcPoint(W,H,phase,lane=0){
- // Approximate the broad arc of the name band: center is below the sticker, so the visible path bows upward.
- const cx=W*.50,cy=H*.93,rx=W*(.56+lane*.035),ry=H*(.78+lane*.045);
- const a=Math.PI*(1.11 + phase*.78); // sweeps across the top title arc
- return [cx+Math.cos(a)*rx,cy+Math.sin(a)*ry];
-}
-function drawDeepSky(card,eye,t){
- const cv=card.querySelector('.deepSky'),rect=card.getBoundingClientRect();if(!rect.width)return;
- const {g,W,H}=prepCanvas(cv,rect);
- const grd=g.createRadialGradient(W*.50,H*.50,0,W*.50,H*.50,W*.72);grd.addColorStop(0,'#10162a');grd.addColorStop(.55,'#050812');grd.addColorStop(1,'#010205');g.fillStyle=grd;g.fillRect(0,0,W,H);
- // very soft distant field; not the moving holo-star layer
- let seed=4137;const rnd=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
- for(let i=0;i<95;i++){const x=rnd()*W,y=rnd()*H,s=.35+rnd()*.7;g.fillStyle=`rgba(205,220,255,${.16+rnd()*.22})`;g.beginPath();g.arc(x,y,s,0,TAU);g.fill()}
-}
-function drawHolo(card,eye,t){
- const cv=card.querySelector('.holoCanvas'),rect=card.getBoundingClientRect();if(!rect.width)return;
- const {g,W,H}=prepCanvas(cv,rect);
- const stereo=eye?0.006:-0.006;
- // Stars travel along lanes that broadly follow the title-band arc.
- for(const s of STAR_SEED){
-   const phase=(s.u + t*.23 + stereo + s.lane*.018)%1;
-   const p=arcPoint(W,H,(phase+1)%1,(s.lane-.5)*.9);
-   // keep most moving stars in/around the title-band zone, with a few drifting lower for depth
-   const yBias=(s.h>.86)?H*.10*Math.sin((phase+s.h)*TAU):0;
-   const hue=190+95*Math.sin((s.h+t*.55)*TAU);
-   g.fillStyle=`hsla(${hue},80%,${67+s.b*22}%,${.34+s.b*.55})`;
-   g.beginPath();g.arc(p[0],p[1]+yBias,s.sz*(.8+s.b*.55),0,TAU);g.fill();
- }
- // Great stellated 120-cell: ~1/3 previous size, runs opposite the star motion and through the title lettering.
- const orbit=(-t*.18 + (eye?-.008:.008));
- const [cx,cy]=arcPoint(W,H,(orbit%.84+.84)% .84/.84,.02);
- const verts=[];
- for(const q0 of GSP_VERT){
-   const q=q0.slice();
-   // genuine 4D rotations: x-w and y-w, plus a small x-y turn for presentation
-   rot2(q,0,3,t*1.28);rot2(q,1,3,-t*.93+.55);rot2(q,2,3,t*.61-.18);rot2(q,0,1,-t*.35);
-   const persp=1/(3.35-q[3]*.34);
-   const sc=W*.030; // about one third of TEST 0.1 apparent size
-   verts.push([cx+q[0]*sc*persp*2.5,cy+q[1]*sc*persp*2.5,q[2],q[3]]);
- }
- g.save();g.globalCompositeOperation='screen';
- for(const [a,b] of GSP_EDGES){const A=verts[a],B=verts[b],depth=clamp((A[2]+B[2]+4)/8,0,1),hue=274+90*Math.sin(t*2.1+(A[3]+B[3])*.28);
-   g.strokeStyle=`hsla(${hue},88%,72%,${.16+depth*.38})`;g.lineWidth=.45+depth*.65;g.beginPath();g.moveTo(A[0],A[1]);g.lineTo(B[0],B[1]);g.stroke();}
- g.restore();
+  const w=Math.max(2,Math.round(rect.width*dpr)),
+        h=Math.max(2,Math.round(rect.height*dpr));
+  if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
+
+  const g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+  const W=rect.width,H=rect.height;
+  g.clearRect(0,0,W,H);
+
+  const grd=g.createRadialGradient(W*.50,H*.46,0,W*.50,H*.46,W*.78);
+  grd.addColorStop(0,'#11172a');
+  grd.addColorStop(.52,'#050812');
+  grd.addColorStop(1,'#010205');
+  g.fillStyle=grd;
+  g.fillRect(0,0,W,H);
+
+  // Approximate centre of the large arc formed by the name band.
+  // The whole star field rotates around this single point like diurnal motion.
+  const px=W*.50, py=H*.68;
+  const ang=t*1.72 + (eye?0.010:-0.010);
+  const farX=Math.max(px,W-px), farY=Math.max(py,H-py);
+  const maxR=Math.hypot(farX,farY)*1.10;
+
+  for(const s of STAR_SEED){
+    const rr=s.r*maxR;
+    const aa=s.a+ang;
+    const X=px+Math.cos(aa)*rr;
+    const Y=py+Math.sin(aa)*rr;
+    if(X<-3||Y<-3||X>W+3||Y>H+3)continue;
+
+    const hue=185+70*Math.sin((s.z+t*.65)*TAU);
+    g.fillStyle=`hsla(${hue},70%,${62+s.b*24}%,${.38+s.b*.54})`;
+    g.beginPath();
+    g.arc(X,Y,s.sz*(.75+s.b*.55),0,TAU);
+    g.fill();
+  }
+
+  // Very faint guide arcs: not a band, just a hint of one common celestial axis.
+  g.strokeStyle='rgba(130,165,220,.042)';
+  g.lineWidth=.5;
+  for(let r=.20;r<1.10;r+=.18){
+    g.beginPath();
+    g.arc(px,py,maxR*r,0,TAU);
+    g.stroke();
+  }
+
+  // 16-cell: travels opposite to the stars near the name characters, while
+  // rotating in true 4D planes.  Line emphasis changes with angle so the small
+  // projection sometimes reads as a star-shaped holographic figure.
+  const orbit=-t*.95+(eye?-.018:.018);
+  const cx=W*(.50+Math.cos(orbit)*.16);
+  const cy=H*(.245+Math.sin(orbit)*.055);
+  const scale=W*.092;
+  const verts=[];
+
+  for(const q0 of CELL16_VERT){
+    const q=q0.slice();
+    rot2(q,0,3,t*1.42+.18);
+    rot2(q,1,3,-t*1.03+.57);
+    rot2(q,2,3,t*.77-.31);
+    rot2(q,0,1,-t*.46);
+    rot2(q,1,2,t*.34+.22);
+
+    // 4D -> 3D perspective, then a small stereo camera shift for each eye.
+    const p4=1/(2.35-q[3]*.72);
+    const X3=q[0]*p4, Y3=q[1]*p4, Z3=q[2]*p4;
+    const stereo=(eye?1:-1)*.018;
+    const p3=1/(2.20-(Z3+stereo)*.48);
+    verts.push({
+      x:cx+(X3+stereo)*scale*2.65*p3,
+      y:cy+Y3*scale*2.65*p3,
+      z:Z3,
+      w:q[3]
+    });
+  }
+
+  g.save();
+  g.globalCompositeOperation='screen';
+
+  // Soft vertex glints help the eight-vertex structure remain readable small.
+  for(let i=0;i<verts.length;i++){
+    const V=verts[i];
+    const pulse=.55+.45*Math.sin(t*5.2+i*1.73);
+    const hue=275+72*Math.sin(t*2.4+V.w*1.6+i*.37);
+    g.fillStyle=`hsla(${hue},92%,75%,${.32+.28*pulse})`;
+    g.beginPath();
+    g.arc(V.x,V.y,1.15+.65*pulse,0,TAU);
+    g.fill();
+  }
+
+  for(let k=0;k<CELL16_EDGES.length;k++){
+    const [a,b]=CELL16_EDGES[k],A=verts[a],B=verts[b];
+    const depth=(A.z+B.z+1.2)/2.4;
+    const phase=Math.sin(t*4.1+k*1.37+(A.w+B.w)*1.8);
+    const starAccent=Math.max(0,phase);
+    const hue=276+92*Math.sin(t*2.1+k*.21+(A.w+B.w)*.5);
+    g.strokeStyle=`hsla(${hue},90%,72%,${.16+depth*.20+starAccent*.32})`;
+    g.lineWidth=.55+depth*.55+starAccent*.85;
+    g.beginPath();
+    g.moveTo(A.x,A.y);
+    g.lineTo(B.x,B.y);
+    g.stroke();
+  }
+
+  // A faint projected outline links angularly adjacent outer vertices.  It is
+  // deliberately subtle: the geometry remains the 16-cell, while its optical
+  // silhouette can momentarily read as a changing star polygon.
+  const ccx=verts.reduce((n,v)=>n+v.x,0)/verts.length;
+  const ccy=verts.reduce((n,v)=>n+v.y,0)/verts.length;
+  const ring=verts.map((v,i)=>({i,a:Math.atan2(v.y-ccy,v.x-ccx),r:(v.x-ccx)**2+(v.y-ccy)**2}))
+                  .sort((u,v)=>u.a-v.a);
+  g.strokeStyle=`hsla(${205+110*Math.sin(t*1.8)},92%,76%,.22)`;
+  g.lineWidth=.8;
+  g.beginPath();
+  ring.forEach((o,i)=>{const v=verts[o.i];if(i===0)g.moveTo(v.x,v.y);else g.lineTo(v.x,v.y)});
+  g.closePath();
+  g.stroke();
+  g.restore();
 }
 
 function paint(t){
- t=clamp(t,-1,1);const e=Math.sign(t)*smoothstep(Math.abs(t));
- cards.forEach((card,eyeIndex)=>{drawDeepSky(card,eyeIndex,e);drawSourceLayers(card);drawHolo(card,eyeIndex,e)});
+ t=clamp(t,-1,1);
+ const e=Math.sign(t)*smoothstep(Math.abs(t));
+ cards.forEach((card,eyeIndex)=>{
+   // A real hologram does not deliver exactly the same wavelength mix to both eyes.
+   // Give the left/right images a small phase difference rather than a fixed tint.
+   const stereoPhase=eyeIndex===0 ? -0.11 : 0.11;
+   specs.forEach(([n,base,rate,sat])=>{
+     const local=e + stereoPhase;
+     const wobble=Math.sin((local*1.55 + base/360)*Math.PI)*13;
+     const hue=base + local*248*rate + wobble*1.35;
+     // "Dark lines" are now treated as just another holographic paint region.
+     // They can be as bright as the surrounding painted areas.
+     const light=n==='07_silver_white' ? .50 : .47;
+     const s=n==='01_dark_lines' ? .92 : Math.min(.90,sat*.88);
+     const lineExtra=n==='01_dark_lines' ? Math.sin(local*Math.PI*2.35)*34 : 0;
+     const [r,g,b]=hueRGB(hue+lineExtra,s,light);
+     const el=card.querySelector(`[data-mask="${n}"]`);
+     el.style.backgroundColor=`rgb(${r},${g},${b})`;
+     el.style.opacity=n==='07_silver_white' ? '.20' : (n==='01_dark_lines' ? '.86' : '.54');
+   });
+   // The exposed silver background is a major holographic surface.
+   // Small tilt movements sweep through a much larger part of the spectrum.
+   const bg=card.querySelector('.bgHolo');
+   const q=e+stereoPhase;
+   const bh1=188 + q*255;
+   const bh2=304 - q*230;
+   const bh3=58  + q*285;
+   const c1=hueRGB(bh1,.68,.45), c2=hueRGB(bh2,.64,.42), c3=hueRGB(bh3,.62,.46);
+   const pos=50 + q*36;
+   bg.style.background=`linear-gradient(121deg,
+     rgb(${c1[0]},${c1[1]},${c1[2]}) 0%,
+     rgb(${c2[0]},${c2[1]},${c2[2]}) ${Math.max(18,pos-24)}%,
+     rgb(${c3[0]},${c3[1]},${c3[2]}) ${Math.min(82,pos+24)}%,
+     rgb(${c1[0]},${c1[1]},${c1[2]}) 100%)`;
+   bg.style.opacity=(.48+Math.abs(q)*.20).toFixed(3);
+   const mat=card.querySelector('.material');
+   mat.style.transform=`translate(${(e+stereoPhase*.35)*1.8}px,${e*.8}px) scale(1.012)`;
+   mat.style.opacity=(.34+Math.abs(e)*.07).toFixed(3);
+   drawSky(card,eyeIndex,e);
+ });
 }
-function animate(){current+=(target-current)*.075;if(Math.abs(target-current)<.0005)current=target;paint(current);raf=requestAnimationFrame(animate)}
+function animate(){
+ current += (target-current)*0.075; // sensor smoothing
+ if(Math.abs(target-current)<0.0005) current=target;
+ paint(current);
+ raf=requestAnimationFrame(animate);
+}
 animate();
+
 function setTarget(v){target=clamp(v,-1,1)}
-function orient(e){if(!active)return;if(bB===null){bB=e.beta||0;bG=e.gamma||0}let x=((e.gamma||0)-bG)/11,y=((e.beta||0)-bB)/18;if(matchMedia('(orientation:portrait)').matches){let q=x;x=y;y=-q}setTarget(x+y*.18)}
-startBtn.addEventListener('click',async()=>{try{if(typeof DeviceOrientationEvent==='undefined'){status.textContent='センサー非対応 / ドラッグ操作可';return}if(typeof DeviceOrientationEvent.requestPermission==='function'&&await DeviceOrientationEvent.requestPermission()!=='granted'){status.textContent='センサー許可なし / ドラッグ操作可';return}bB=bG=null;active=true;addEventListener('deviceorientation',orient,true);startBtn.textContent='TILT ACTIVE';status.textContent='星＝帯円弧に沿う / 多胞体＝逆回転';}catch(e){status.textContent='センサーを開始できません'}});
-resetBtn.addEventListener('click',()=>{bB=bG=null;setTarget(0)});
-maskToggle.addEventListener('click',()=>{
- const now=cards[0].querySelector('.charCanvas').style.opacity!=='0';
- cards.forEach(c=>c.querySelector('.charCanvas').style.opacity=now?'0':'.68');
- maskToggle.textContent=now?'MASK OFF':'CHAR MASK';
+function orient(e){
+ if(!active)return;
+ if(bB===null){bB=e.beta||0;bG=e.gamma||0}
+ let x=((e.gamma||0)-bG)/11,y=((e.beta||0)-bB)/18;
+ if(matchMedia('(orientation:portrait)').matches){let q=x;x=y;y=-q}
+ setTarget(x+y*.18);
+}
+startBtn.addEventListener('click',async()=>{
+ try{
+  if(typeof DeviceOrientationEvent==='undefined'){status.textContent='センサー非対応 / ドラッグ操作可';return}
+  if(typeof DeviceOrientationEvent.requestPermission==='function'&&await DeviceOrientationEvent.requestPermission()!=='granted'){
+   status.textContent='センサー許可なし / ドラッグ操作可';return
+  }
+  bB=bG=null;active=true;addEventListener('deviceorientation',orient,true);
+  startBtn.textContent='TILT ACTIVE';status.textContent='現在角度を基準に設定';
+ }catch(e){status.textContent='センサーを開始できません'}
 });
-function pointer(e){const r=pair.getBoundingClientRect();setTarget(((e.clientX-r.left)/r.width-.5)*3.2)}
-pair.onpointerdown=e=>{drag=true;pair.setPointerCapture(e.pointerId);pointer(e)};pair.onpointermove=e=>{if(drag)pointer(e)};pair.onpointerup=pair.onpointercancel=()=>drag=false;
+resetBtn.addEventListener('click',()=>{bB=bG=null;setTarget(0)});
+maskToggle.addEventListener('click',()=>{const off=cards[0].classList.toggle('maskOff');cards[1].classList.toggle('maskOff',off);maskToggle.textContent=off?'MASK OFF':'CHAR MASK';});
+function pointer(e){
+ const r=pair.getBoundingClientRect();
+ setTarget(((e.clientX-r.left)/r.width-.5)*3.2);
+}
+pair.onpointerdown=e=>{drag=true;pair.setPointerCapture(e.pointerId);pointer(e)};
+pair.onpointermove=e=>{if(drag)pointer(e)};
+pair.onpointerup=pair.onpointercancel=()=>drag=false;
 
 if('serviceWorker'in navigator){
  addEventListener('load',async()=>{
