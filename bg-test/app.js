@@ -76,69 +76,88 @@ const STAR_SEED=(()=>{
   return a;
 })();
 
+function moonNoise(x,y){
+  // Deterministic low-frequency lunar albedo. No glow/outline: the disc itself carries the texture.
+  const n1=Math.sin(x*5.7+y*3.1)*.42;
+  const n2=Math.sin(x*12.3-y*8.7)*.22;
+  const n3=Math.cos(x*23.1+y*17.4)*.12;
+  return n1+n2+n3;
+}
+
 function drawMoonEye(g,cx,cy,R,phaseDays,eye,tilt){
   // phaseDays: -5.5 ~= lunar day 24, 0 = new moon, +5 = lunar day 5.
-  // The moon never pauses; phase and eye opening are independent of orbital motion.
+  // Phase is calculated as a lit sphere, not as one circle punched from another.
   g.save();
   g.globalCompositeOperation='source-over';
 
-  // Dark lunar disc remains just visible, like a printed / embossed holo element.
-  g.fillStyle='rgba(7,8,13,.92)';
-  g.beginPath(); g.arc(cx,cy,R,0,TAU); g.fill();
-  g.strokeStyle='rgba(200,210,225,.34)';
-  g.lineWidth=Math.max(.65,R*.028);
-  g.beginPath(); g.arc(cx,cy,R,0,TAU); g.stroke();
+  const N=72;
+  const oc=document.createElement('canvas');
+  oc.width=N; oc.height=N;
+  const og=oc.getContext('2d');
+  const im=og.createImageData(N,N), d=im.data;
+  const phaseAngle=Math.PI - phaseDays*(TAU/29.53);
+  const lx=Math.sin(phaseAngle), lz=Math.cos(phaseAngle);
+  const stereoLight=(eye===0?-1:1)*.010;
 
-  // Crescent: pale silver, deliberately simple and graphic.
-  const d=Math.min(1,Math.abs(phaseDays)/5.5);
-  const shift=R*(.06 + .88*Math.pow(d,.92));
-  if(Math.abs(phaseDays)>.05){
-    g.save();
-    g.beginPath(); g.arc(cx,cy,R*.965,0,TAU); g.clip();
-    g.fillStyle='rgba(224,226,216,.90)';
-    g.beginPath(); g.arc(cx,cy,R*.965,0,TAU); g.fill();
-    // Waning (before new): light on left. Waxing (after new): light on right.
-    g.globalCompositeOperation='source-over';
-    g.fillStyle='rgba(7,8,13,.98)';
-    const darkShift=phaseDays<0 ? shift : -shift;
-    g.beginPath(); g.arc(cx+darkShift,cy,R*.985,0,TAU); g.fill();
-    g.restore();
+  for(let j=0;j<N;j++){
+    for(let i=0;i<N;i++){
+      const x=(i+.5-N/2)/(N*.5), y=(j+.5-N/2)/(N*.5);
+      const rr=x*x+y*y, k=(j*N+i)*4;
+      if(rr>1){d[k+3]=0;continue}
+      const z=Math.sqrt(Math.max(0,1-rr));
+      // Directional sunlight on a sphere: this gives a straight terminator at half moon.
+      const ndotl=x*(lx+stereoLight)+z*lz;
+      const sun=Math.max(0,ndotl);
+      // Slight limb darkening plus fixed mottled maria/crater texture.
+      const limb=.64+.36*Math.pow(z,.45);
+      const tex=moonNoise(x,y);
+      const maria=.84 + tex*.11 - .07*Math.sin((x+.28)*9.4)*Math.sin((y-.11)*7.3);
+      const lit=Math.pow(sun,.72);
+      const earth=.010 + .018*z; // just enough to keep the new-moon disc materially present
+      const v=clamp((earth + lit*.88)*limb*maria,0,1);
+      const warm=clamp(v*1.02,0,1), cool=clamp(v*.96,0,1);
+      d[k]=Math.round(216*warm);
+      d[k+1]=Math.round(216*v);
+      d[k+2]=Math.round(224*cool);
+      d[k+3]=255;
+    }
   }
+  og.putImageData(im,0,0);
+  g.drawImage(oc,cx-R,cy-R,R*2,R*2);
 
   // One eye begins opening before exact new moon and closes after it.
-  // Slight left/right threshold difference preserves the strange stereo-holo feel.
-  const window=2.45;
+  // Its timing is independent of orbit, so the moon never waits for the eye.
+  const window=2.65;
   const stereoBias=eye===0 ? -.10 : .10;
   const ad=Math.abs(phaseDays+stereoBias);
-  let open=1-Math.min(1,Math.max(0,(ad-.25)/(window-.25)));
+  let open=1-Math.min(1,Math.max(0,(ad-.18)/(window-.18)));
   open=open*open*(3-2*open);
   if(open>.012){
     const ew=R*.72;
-    const eh=R*(.085 + .26*open);
+    const eh=R*(.080 + .27*open);
     g.save();
     g.translate(cx,cy+R*.03);
-    g.rotate(-tilt*.10 + (eye?0.008:-0.008));
+    g.rotate(-tilt*.055 + (eye?0.006:-0.006));
     g.beginPath();
     g.moveTo(-ew*.52,0);
     g.quadraticCurveTo(0,-eh,ew*.52,0);
     g.quadraticCurveTo(0,eh,-ew*.52,0);
     g.closePath();
-    g.fillStyle=`rgba(211,207,188,${.30+.66*open})`;
+    g.fillStyle=`rgba(187,181,166,${.18+.74*open})`;
     g.fill();
-    g.strokeStyle=`rgba(33,19,38,${.45+.45*open})`;
-    g.lineWidth=Math.max(.6,R*.026);
+    g.strokeStyle=`rgba(24,15,29,${.42+.48*open})`;
+    g.lineWidth=Math.max(.55,R*.024);
     g.stroke();
 
-    const irisR=R*(.095+.035*open);
-    g.fillStyle=`rgba(92,58,112,${.68+.26*open})`;
+    const irisR=R*(.094+.037*open);
+    g.fillStyle=`rgba(86,54,104,${.64+.30*open})`;
     g.beginPath(); g.arc(0,0,irisR,0,TAU); g.fill();
-    g.fillStyle=`rgba(6,5,8,${.86+.12*open})`;
+    g.fillStyle=`rgba(5,4,7,${.88+.10*open})`;
     g.beginPath(); g.arc(0,0,irisR*.43,0,TAU); g.fill();
     g.restore();
   }
   g.restore();
 }
-
 function drawSky(card,eye,t){
   const cv=card.querySelector('.skyCanvas'),
         dpr=Math.min(devicePixelRatio||1,2),
@@ -204,8 +223,10 @@ function drawSky(card,eye,t){
   // It passes the name area while continuously changing from lunar day 24 -> new -> day 5.
   const moonA= -t*1.72 - Math.PI*.54 + (eye===0?-.012:.012);
   const orbitR=W*.31;
-  const moonX=px+Math.cos(moonA)*orbitR;
-  const moonY=py+Math.sin(moonA)*orbitR*.60;
+  // Keep the lunar arc up in the name-band zone; it no longer crosses the face at neutral.
+  const moonCx=px, moonCy=H*.39;
+  const moonX=moonCx+Math.cos(moonA)*orbitR;
+  const moonY=moonCy+Math.sin(moonA)*orbitR*.43;
   const moonR=W*.050;
   const phaseDays=t<0 ? t*5.53 : t*5.00;
   drawMoonEye(g,moonX,moonY,moonR,phaseDays,eye,t);
@@ -250,11 +271,11 @@ function paint(t){
    const mat=card.querySelector('.material');
    mat.style.transform=`translate(${(e+stereoPhase*.35)*1.8}px,${e*.8}px) scale(1.012)`;
    mat.style.opacity=(.34+Math.abs(e)*.07).toFixed(3);
-   drawSky(card,eyeIndex,e);
+   drawSky(card,eyeIndex,t);
  });
 }
 function animate(){
- current += (target-current)*0.075; // sensor smoothing
+ current += (target-current)*0.105; // sensor smoothing; celestial motion stays linear through neutral
  if(Math.abs(target-current)<0.0005) current=target;
  paint(current);
  raf=requestAnimationFrame(animate);
