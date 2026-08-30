@@ -85,7 +85,7 @@ function moonNoise(x,y){
 }
 
 function drawMoonEye(g,cx,cy,R,phaseDays,eye,tilt){
-  // phaseDays: -5.5 ~= lunar day 24, 0 = new moon, +5 = lunar day 5.
+  // phaseDays: about -7.5 ~= lunar day 22, 0 = new moon, +7.5 ~= lunar day 7.5 (half moon).
   // Phase is calculated as a lit sphere, not as one circle punched from another.
   g.save();
   g.globalCompositeOperation='source-over';
@@ -231,7 +231,7 @@ function drawSky(card,eye,t){
   // Keep the moon on the SAME circular centre as the star field.
   // Move the neutral position upward by two moon diameters by increasing
   // the orbit radius, rather than shifting the orbit centre.
-  const orbitR=Math.min(W,H)*(.375 + .052*4.0);
+  const orbitR=Math.min(W,H)*(.375 + .052*4.0 - .052*.40); // 0.2 moon diameters lower at the top of the visible arc
   // The moon reacts more strongly to a small tilt than the star field.
   const moonTravel=clamp(t*1.65,-1,1);
   const moonA= -Math.PI*.50 - moonTravel*2.35;
@@ -240,11 +240,17 @@ function drawSky(card,eye,t){
   const moonStereo=(eye===0?-1:1)*Math.min(W,H)*.0060;
   const moonX=moonCx+Math.cos(moonA)*orbitR+moonStereo;
   const moonY=moonCy+Math.sin(moonA)*orbitR;
-  // Lunar phase also has a higher gain near neutral: small tilts visibly change
-  // both position and phase, while the end states remain around day 24 and day 5.
-  const phaseT=clamp(t*1.75,-1,1);
-  const phaseDays=phaseT<0 ? phaseT*5.53 : phaseT*5.00;
-  drawMoonEye(g,moonX,moonY,moonR,phaseDays,eye,t);
+  // Lunar phase spans approximately half-moon -> new moon/eye -> half-moon.
+  // It keeps the same high response to small tilt as the orbital travel.
+  const phaseT=clamp(t*1.95,-1,1);
+  const phaseDays=phaseT*7.50;
+
+  // Moon only uses the upper half of the circular orbit. Once it reaches the
+  // left/right edge of that arc, it disappears instead of wrapping into a lower corner.
+  const moonOnUpperArc=(moonA>=-Math.PI && moonA<=0);
+  if(moonOnUpperArc && moonX>-moonR*1.05 && moonX<W+moonR*1.05){
+    drawMoonEye(g,moonX,moonY,moonR,phaseDays,eye,t);
+  }
 }
 
 function paint(t){
