@@ -225,17 +225,25 @@ function drawSky(card,eye,t){
   }
 
   // Moon: same orbital centre as the star field, but travelling in reverse.
-  // Neutral tilt places it on the upper arc around the name-band height; across
-  // the full tilt range it sweeps roughly the same angular amount as the stars.
-  const moonA= -Math.PI*.50 - t*1.72;
-  const orbitR=Math.min(W,H)*.375;
+  // Neutral tilt places it high on the name-band arc. The centre is identical to
+  // the star field centre; only the radius and angular response differ.
   const moonR=Math.min(W,H)*.052;
+  // Keep the moon on the SAME circular centre as the star field.
+  // Move the neutral position upward by two moon diameters by increasing
+  // the orbit radius, rather than shifting the orbit centre.
+  const orbitR=Math.min(W,H)*(.375 + .052*4.0);
+  // The moon reacts more strongly to a small tilt than the star field.
+  const moonTravel=clamp(t*1.65,-1,1);
+  const moonA= -Math.PI*.50 - moonTravel*2.35;
   const moonCx=px, moonCy=py;
   // Stereo disparity changes only the apparent depth, never the true orbit centre.
   const moonStereo=(eye===0?-1:1)*Math.min(W,H)*.0060;
   const moonX=moonCx+Math.cos(moonA)*orbitR+moonStereo;
   const moonY=moonCy+Math.sin(moonA)*orbitR;
-  const phaseDays=t<0 ? t*5.53 : t*5.00;
+  // Lunar phase also has a higher gain near neutral: small tilts visibly change
+  // both position and phase, while the end states remain around day 24 and day 5.
+  const phaseT=clamp(t*1.75,-1,1);
+  const phaseDays=phaseT<0 ? phaseT*5.53 : phaseT*5.00;
   drawMoonEye(g,moonX,moonY,moonR,phaseDays,eye,t);
 }
 
