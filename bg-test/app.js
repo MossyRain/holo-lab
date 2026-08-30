@@ -221,13 +221,17 @@ function drawSky(card,eye,t){
 
   // Moon: orbits by the same angular amount as the stars, but in reverse.
   // It passes the name area while continuously changing from lunar day 24 -> new -> day 5.
-  const moonA= -t*1.72 - Math.PI*.54 + (eye===0?-.012:.012);
+  const moonA= -t*1.72 - Math.PI*.54; // true circular orbit; stereo is positional, not an orbital phase cheat
   const orbitR=W*.31;
   const moonR=W*.050;
   // Raise the entire lunar orbit by 1.5 moon diameters (3 radii) from v0.5.
   const moonCx=px, moonCy=H*.39 - moonR*3;
-  const moonX=moonCx+Math.cos(moonA)*orbitR;
-  const moonY=moonCy+Math.sin(moonA)*orbitR*.43;
+  // Moon sits between the name band and character in depth, so give it a clearly
+  // stronger binocular disparity than the distant star field. Both eyes still
+  // follow the SAME true circle.
+  const moonStereo=(eye===0?-1:1)*W*.0060;
+  const moonX=moonCx+Math.cos(moonA)*orbitR+moonStereo;
+  const moonY=moonCy+Math.sin(moonA)*orbitR;
   const phaseDays=t<0 ? t*5.53 : t*5.00;
   drawMoonEye(g,moonX,moonY,moonR,phaseDays,eye,t);
 }
