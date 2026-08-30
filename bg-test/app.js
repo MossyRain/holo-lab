@@ -223,11 +223,11 @@ function drawSky(card,eye,t){
   // It passes the name area while continuously changing from lunar day 24 -> new -> day 5.
   const moonA= -t*1.72 - Math.PI*.54 + (eye===0?-.012:.012);
   const orbitR=W*.31;
-  // Keep the lunar arc up in the name-band zone; it no longer crosses the face at neutral.
-  const moonCx=px, moonCy=H*.39;
+  const moonR=W*.050;
+  // Raise the entire lunar orbit by 1.5 moon diameters (3 radii) from v0.5.
+  const moonCx=px, moonCy=H*.39 - moonR*3;
   const moonX=moonCx+Math.cos(moonA)*orbitR;
   const moonY=moonCy+Math.sin(moonA)*orbitR*.43;
-  const moonR=W*.050;
   const phaseDays=t<0 ? t*5.53 : t*5.00;
   drawMoonEye(g,moonX,moonY,moonR,phaseDays,eye,t);
 }
