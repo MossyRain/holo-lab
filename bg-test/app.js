@@ -112,13 +112,18 @@ function drawMoonEye(g,cx,cy,R,phaseDays,eye,tilt){
       const limb=.64+.36*Math.pow(z,.45);
       const tex=moonNoise(x,y);
       const maria=.84 + tex*.11 - .07*Math.sin((x+.28)*9.4)*Math.sin((y-.11)*7.3);
-      const lit=Math.pow(sun,.72);
-      const earth=.010 + .018*z; // just enough to keep the new-moon disc materially present
-      const v=clamp((earth + lit*.88)*limb*maria,0,1);
-      const warm=clamp(v*1.02,0,1), cool=clamp(v*.96,0,1);
-      d[k]=Math.round(216*warm);
-      d[k+1]=Math.round(216*v);
-      d[k+2]=Math.round(224*cool);
+      const lit=Math.pow(sun,.68);
+      // Keep the moon materially brighter, but without an exterior glow.
+      // A soft spherical falloff plus relief modulation makes it read as a lit ball,
+      // not a flat white cutout.
+      const earth=.012 + .020*z;
+      const sphereShade=.72 + .28*Math.pow(z,.62);
+      const relief=clamp(1 + tex*.060 - .035*Math.sin((x-.10)*18.0)*Math.cos((y+.08)*15.0),.82,1.10);
+      const v=clamp((earth + lit*1.08)*limb*maria*sphereShade*relief,0,1);
+      const warm=clamp(v*1.035,0,1), cool=clamp(v*.985,0,1);
+      d[k]=Math.round(242*warm);
+      d[k+1]=Math.round(239*v);
+      d[k+2]=Math.round(246*cool);
       d[k+3]=255;
     }
   }
@@ -219,17 +224,15 @@ function drawSky(card,eye,t){
     g.beginPath(); g.arc(px,py,maxR*r,0,TAU); g.stroke();
   }
 
-  // Moon: orbits by the same angular amount as the stars, but in reverse.
-  // It passes the name area while continuously changing from lunar day 24 -> new -> day 5.
-  const moonA= -t*1.72 - Math.PI*.54; // true circular orbit; stereo is positional, not an orbital phase cheat
-  const orbitR=W*.31;
-  const moonR=W*.050;
-  // Raise the entire lunar orbit by 1.5 moon diameters (3 radii) from v0.5.
-  const moonCx=px, moonCy=H*.39 - moonR*3;
-  // Moon sits between the name band and character in depth, so give it a clearly
-  // stronger binocular disparity than the distant star field. Both eyes still
-  // follow the SAME true circle.
-  const moonStereo=(eye===0?-1:1)*W*.0060;
+  // Moon: same orbital centre as the star field, but travelling in reverse.
+  // Neutral tilt places it on the upper arc around the name-band height; across
+  // the full tilt range it sweeps roughly the same angular amount as the stars.
+  const moonA= -Math.PI*.50 - t*1.72;
+  const orbitR=Math.min(W,H)*.375;
+  const moonR=Math.min(W,H)*.052;
+  const moonCx=px, moonCy=py;
+  // Stereo disparity changes only the apparent depth, never the true orbit centre.
+  const moonStereo=(eye===0?-1:1)*Math.min(W,H)*.0060;
   const moonX=moonCx+Math.cos(moonA)*orbitR+moonStereo;
   const moonY=moonCy+Math.sin(moonA)*orbitR;
   const phaseDays=t<0 ? t*5.53 : t*5.00;
