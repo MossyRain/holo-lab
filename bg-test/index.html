@@ -1,1 +1,43 @@
-<!-- temporary -->
+<!doctype html>
+<html lang="ja"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#08080a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="HOLO LAB">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="./style.css">
+<title>HOLO LAB</title></head><body><div id="shell">
+
+<section id="menu" class="screen active">
+  <header><h1>HOLO LAB</h1><p>DIGITAL HOLOGRAM STICKERS</p></header>
+  <button class="tile" id="openMira">
+    <img src="./mira-jii.jpg" alt="">
+    <span><b>聖虚MIRA壽</b><small>セントホロミラージュ</small></span>
+  </button>
+  <footer>HOLO LAB BG TEST 0.1</footer>
+</section>
+
+<section id="viewer" class="screen">
+  <div class="viewerFrame">
+    <div class="bar top">
+      <button id="back">‹ MENU</button>
+      <div class="name"><b>聖虚MIRA壽</b><small>セントホロミラージュ</small></div>
+      <button id="start">TILT START</button>
+    </div>
+
+    <div id="pair">
+      <div class="card"></div>
+      <div class="card"></div>
+    </div>
+
+    <div class="bar bottom">
+      <span id="status">背景試作 / 星＝日周運動・多胞体＝逆回転</span>
+      <button id="maskToggle">CHAR MASK</button><button id="reset">RESET</button>
+    </div>
+  </div>
+</section>
+
+</div><script src="./app.js"></script></body></html>
