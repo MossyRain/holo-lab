@@ -58,45 +58,85 @@ function hueRGB(h,s,l){
 
 const TAU=Math.PI*2;
 
-// Full-field star map.  Stars are distributed over a disc large enough to
-// cover the entire sticker while rotating around the name-band arc centre.
+// Dense, restrained star field: many small stars rather than game-like glow effects.
+// All stars share the same celestial pole, so the whole field reads as diurnal motion.
 const STAR_SEED=(()=>{
   const a=[]; let seed=91731;
   const rnd=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
-  for(let i=0;i<260;i++){
+  for(let i=0;i<620;i++){
     a.push({
       r:Math.sqrt(rnd()),
       a:rnd()*TAU,
       z:rnd(),
-      b:.28+rnd()*.72,
-      sz:.38+rnd()*1.18
+      b:.20+rnd()*.80,
+      sz:.28+rnd()*.92,
+      cross:rnd()>.955
     });
   }
   return a;
 })();
 
-// Regular 16-cell (正八胞体): the eight vertices ±e1 … ±e4.
-// Every vertex is joined to every vertex except itself and its antipode.
-const CELL16_VERT=[
-  [ 1,0,0,0],[-1,0,0,0],
-  [0, 1,0,0],[0,-1,0,0],
-  [0,0, 1,0],[0,0,-1,0],
-  [0,0,0, 1],[0,0,0,-1]
-];
-const CELL16_EDGES=[];
-for(let i=0;i<CELL16_VERT.length;i++){
-  for(let j=i+1;j<CELL16_VERT.length;j++){
-    const dot=CELL16_VERT[i][0]*CELL16_VERT[j][0]
-             +CELL16_VERT[i][1]*CELL16_VERT[j][1]
-             +CELL16_VERT[i][2]*CELL16_VERT[j][2]
-             +CELL16_VERT[i][3]*CELL16_VERT[j][3];
-    if(dot===0) CELL16_EDGES.push([i,j]);
-  }
-}
+function drawMoonEye(g,cx,cy,R,phaseDays,eye,tilt){
+  // phaseDays: -5.5 ~= lunar day 24, 0 = new moon, +5 = lunar day 5.
+  // The moon never pauses; phase and eye opening are independent of orbital motion.
+  g.save();
+  g.globalCompositeOperation='source-over';
 
-function rot2(v,a,b,th){
-  const c=Math.cos(th),s=Math.sin(th),x=v[a],y=v[b];
-  v[a]=x*c-y*s; v[b]=x*s+y*c;
+  // Dark lunar disc remains just visible, like a printed / embossed holo element.
+  g.fillStyle='rgba(7,8,13,.92)';
+  g.beginPath(); g.arc(cx,cy,R,0,TAU); g.fill();
+  g.strokeStyle='rgba(200,210,225,.34)';
+  g.lineWidth=Math.max(.65,R*.028);
+  g.beginPath(); g.arc(cx,cy,R,0,TAU); g.stroke();
+
+  // Crescent: pale silver, deliberately simple and graphic.
+  const d=Math.min(1,Math.abs(phaseDays)/5.5);
+  const shift=R*(.06 + .88*Math.pow(d,.92));
+  if(Math.abs(phaseDays)>.05){
+    g.save();
+    g.beginPath(); g.arc(cx,cy,R*.965,0,TAU); g.clip();
+    g.fillStyle='rgba(224,226,216,.90)';
+    g.beginPath(); g.arc(cx,cy,R*.965,0,TAU); g.fill();
+    // Waning (before new): light on left. Waxing (after new): light on right.
+    g.globalCompositeOperation='source-over';
+    g.fillStyle='rgba(7,8,13,.98)';
+    const darkShift=phaseDays<0 ? shift : -shift;
+    g.beginPath(); g.arc(cx+darkShift,cy,R*.985,0,TAU); g.fill();
+    g.restore();
+  }
+
+  // One eye begins opening before exact new moon and closes after it.
+  // Slight left/right threshold difference preserves the strange stereo-holo feel.
+  const window=2.45;
+  const stereoBias=eye===0 ? -.10 : .10;
+  const ad=Math.abs(phaseDays+stereoBias);
+  let open=1-Math.min(1,Math.max(0,(ad-.25)/(window-.25)));
+  open=open*open*(3-2*open);
+  if(open>.012){
+    const ew=R*.72;
+    const eh=R*(.085 + .26*open);
+    g.save();
+    g.translate(cx,cy+R*.03);
+    g.rotate(-tilt*.10 + (eye?0.008:-0.008));
+    g.beginPath();
+    g.moveTo(-ew*.52,0);
+    g.quadraticCurveTo(0,-eh,ew*.52,0);
+    g.quadraticCurveTo(0,eh,-ew*.52,0);
+    g.closePath();
+    g.fillStyle=`rgba(211,207,188,${.30+.66*open})`;
+    g.fill();
+    g.strokeStyle=`rgba(33,19,38,${.45+.45*open})`;
+    g.lineWidth=Math.max(.6,R*.026);
+    g.stroke();
+
+    const irisR=R*(.095+.035*open);
+    g.fillStyle=`rgba(92,58,112,${.68+.26*open})`;
+    g.beginPath(); g.arc(0,0,irisR,0,TAU); g.fill();
+    g.fillStyle=`rgba(6,5,8,${.86+.12*open})`;
+    g.beginPath(); g.arc(0,0,irisR*.43,0,TAU); g.fill();
+    g.restore();
+  }
+  g.restore();
 }
 
 function drawSky(card,eye,t){
@@ -114,115 +154,61 @@ function drawSky(card,eye,t){
   const W=rect.width,H=rect.height;
   g.clearRect(0,0,W,H);
 
-  const grd=g.createRadialGradient(W*.50,H*.46,0,W*.50,H*.46,W*.78);
-  grd.addColorStop(0,'#11172a');
-  grd.addColorStop(.52,'#050812');
-  grd.addColorStop(1,'#010205');
+  // Quiet dark field. No nebula, rays or social-game-style effects.
+  const grd=g.createRadialGradient(W*.48,H*.45,0,W*.48,H*.45,W*.82);
+  grd.addColorStop(0,'#0d1220');
+  grd.addColorStop(.56,'#040710');
+  grd.addColorStop(1,'#010204');
   g.fillStyle=grd;
   g.fillRect(0,0,W,H);
 
-  // Approximate centre of the large arc formed by the name band.
-  // The whole star field rotates around this single point like diurnal motion.
+  // Centre of the large name-band arc. The entire sky revolves around this point.
   const px=W*.50, py=H*.68;
-  const ang=t*1.72 + (eye?0.010:-0.010);
+  const stereoPhase=eye===0 ? -.010 : .010;
+  const ang=t*1.72 + stereoPhase;
   const farX=Math.max(px,W-px), farY=Math.max(py,H-py);
-  const maxR=Math.hypot(farX,farY)*1.10;
+  const maxR=Math.hypot(farX,farY)*1.13;
 
+  // Dense full-field stars. Same angular motion; tiny depth/stereo offsets only.
   for(const s of STAR_SEED){
     const rr=s.r*maxR;
     const aa=s.a+ang;
-    const X=px+Math.cos(aa)*rr;
+    const par=(s.z-.5)*(eye===0?-1:1)*W*.0018;
+    const X=px+Math.cos(aa)*rr+par;
     const Y=py+Math.sin(aa)*rr;
-    if(X<-3||Y<-3||X>W+3||Y>H+3)continue;
+    if(X<-4||Y<-4||X>W+4||Y>H+4)continue;
 
-    const hue=185+70*Math.sin((s.z+t*.65)*TAU);
-    g.fillStyle=`hsla(${hue},70%,${62+s.b*24}%,${.38+s.b*.54})`;
-    g.beginPath();
-    g.arc(X,Y,s.sz*(.75+s.b*.55),0,TAU);
-    g.fill();
+    const hue=190+38*Math.sin((s.z+t*.22)*TAU);
+    const alpha=.34+s.b*.58;
+    const radius=s.sz*(.70+s.b*.48);
+    g.fillStyle=`hsla(${hue},34%,${67+s.b*22}%,${alpha})`;
+    g.beginPath(); g.arc(X,Y,radius,0,TAU); g.fill();
+
+    // Only a few stars become tiny four-point marks. No large sparkles or bloom.
+    if(s.cross){
+      g.strokeStyle=`hsla(${hue},30%,86%,${alpha*.58})`;
+      g.lineWidth=.48;
+      const l=radius*2.7;
+      g.beginPath(); g.moveTo(X-l,Y); g.lineTo(X+l,Y); g.moveTo(X,Y-l); g.lineTo(X,Y+l); g.stroke();
+    }
   }
 
-  // Very faint guide arcs: not a band, just a hint of one common celestial axis.
-  g.strokeStyle='rgba(130,165,220,.042)';
-  g.lineWidth=.5;
-  for(let r=.20;r<1.10;r+=.18){
-    g.beginPath();
-    g.arc(px,py,maxR*r,0,TAU);
-    g.stroke();
+  // Barely visible concentric traces make the common rotation axis perceptible.
+  g.strokeStyle='rgba(135,155,190,.026)';
+  g.lineWidth=.45;
+  for(let r=.18;r<1.12;r+=.20){
+    g.beginPath(); g.arc(px,py,maxR*r,0,TAU); g.stroke();
   }
 
-  // 16-cell: travels opposite to the stars near the name characters, while
-  // rotating in true 4D planes.  Line emphasis changes with angle so the small
-  // projection sometimes reads as a star-shaped holographic figure.
-  const orbit=-t*.95+(eye?-.018:.018);
-  const cx=W*(.50+Math.cos(orbit)*.16);
-  const cy=H*(.245+Math.sin(orbit)*.055);
-  const scale=W*.092;
-  const verts=[];
-
-  for(const q0 of CELL16_VERT){
-    const q=q0.slice();
-    rot2(q,0,3,t*1.42+.18);
-    rot2(q,1,3,-t*1.03+.57);
-    rot2(q,2,3,t*.77-.31);
-    rot2(q,0,1,-t*.46);
-    rot2(q,1,2,t*.34+.22);
-
-    // 4D -> 3D perspective, then a small stereo camera shift for each eye.
-    const p4=1/(2.35-q[3]*.72);
-    const X3=q[0]*p4, Y3=q[1]*p4, Z3=q[2]*p4;
-    const stereo=(eye?1:-1)*.018;
-    const p3=1/(2.20-(Z3+stereo)*.48);
-    verts.push({
-      x:cx+(X3+stereo)*scale*2.65*p3,
-      y:cy+Y3*scale*2.65*p3,
-      z:Z3,
-      w:q[3]
-    });
-  }
-
-  g.save();
-  g.globalCompositeOperation='screen';
-
-  // Soft vertex glints help the eight-vertex structure remain readable small.
-  for(let i=0;i<verts.length;i++){
-    const V=verts[i];
-    const pulse=.55+.45*Math.sin(t*5.2+i*1.73);
-    const hue=275+72*Math.sin(t*2.4+V.w*1.6+i*.37);
-    g.fillStyle=`hsla(${hue},92%,75%,${.32+.28*pulse})`;
-    g.beginPath();
-    g.arc(V.x,V.y,1.15+.65*pulse,0,TAU);
-    g.fill();
-  }
-
-  for(let k=0;k<CELL16_EDGES.length;k++){
-    const [a,b]=CELL16_EDGES[k],A=verts[a],B=verts[b];
-    const depth=(A.z+B.z+1.2)/2.4;
-    const phase=Math.sin(t*4.1+k*1.37+(A.w+B.w)*1.8);
-    const starAccent=Math.max(0,phase);
-    const hue=276+92*Math.sin(t*2.1+k*.21+(A.w+B.w)*.5);
-    g.strokeStyle=`hsla(${hue},90%,72%,${.16+depth*.20+starAccent*.32})`;
-    g.lineWidth=.55+depth*.55+starAccent*.85;
-    g.beginPath();
-    g.moveTo(A.x,A.y);
-    g.lineTo(B.x,B.y);
-    g.stroke();
-  }
-
-  // A faint projected outline links angularly adjacent outer vertices.  It is
-  // deliberately subtle: the geometry remains the 16-cell, while its optical
-  // silhouette can momentarily read as a changing star polygon.
-  const ccx=verts.reduce((n,v)=>n+v.x,0)/verts.length;
-  const ccy=verts.reduce((n,v)=>n+v.y,0)/verts.length;
-  const ring=verts.map((v,i)=>({i,a:Math.atan2(v.y-ccy,v.x-ccx),r:(v.x-ccx)**2+(v.y-ccy)**2}))
-                  .sort((u,v)=>u.a-v.a);
-  g.strokeStyle=`hsla(${205+110*Math.sin(t*1.8)},92%,76%,.22)`;
-  g.lineWidth=.8;
-  g.beginPath();
-  ring.forEach((o,i)=>{const v=verts[o.i];if(i===0)g.moveTo(v.x,v.y);else g.lineTo(v.x,v.y)});
-  g.closePath();
-  g.stroke();
-  g.restore();
+  // Moon: orbits by the same angular amount as the stars, but in reverse.
+  // It passes the name area while continuously changing from lunar day 24 -> new -> day 5.
+  const moonA= -t*1.72 - Math.PI*.54 + (eye===0?-.012:.012);
+  const orbitR=W*.31;
+  const moonX=px+Math.cos(moonA)*orbitR;
+  const moonY=py+Math.sin(moonA)*orbitR*.60;
+  const moonR=W*.050;
+  const phaseDays=t<0 ? t*5.53 : t*5.00;
+  drawMoonEye(g,moonX,moonY,moonR,phaseDays,eye,t);
 }
 
 function paint(t){
