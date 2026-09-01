@@ -1,12 +1,12 @@
-HOLO LAB — ? ORB 3D TEST 01
+HOLO LAB — ? ORB 3D TEST 02
 
-Standalone prototype.
-- Two-eye stereoscopic rendering
-- Transparent 3D sphere
-- 3D/extruded point-volume question mark inside the sphere
-- X/Y tilt response, including diagonal viewing
+- No visible outline around the sphere
+- Semi-transparent angle-dependent holographic shell
+- Strong holographic hue change on the 3D question mark
+- Luminous inclusions suspended throughout the sphere volume
+- No refraction
+- Stereo left/right cameras
+- Up/down/left/right/diagonal tilt response
 - Drag fallback
-- No flame yet
-- No character/background compositing yet
 
-GitHub Pages: upload the three files into a test folder and open index.html.
+Flame and character compositing are not included yet.
