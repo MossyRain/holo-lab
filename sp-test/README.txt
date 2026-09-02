@@ -1,11 +1,7 @@
-HOLO LAB — ? ORB 3D TEST 05
-
-Main changes from 04:
-- ? body is treated as a flat-front 2D silhouette extruded in depth, not a rounded tube.
-- Dot is a separate solid cylinder.
-- Same plane uses the same holo color.
-- Small tilt changes the entire face color strongly.
-- Inclusions are much smaller and limited to a narrow size range.
-- Inclusions are glow-only; no dark/black particle state.
-- Shell is lighter/more transparent, with only edge milkiness and material highlights.
-- No refraction and no scene-object reflections.
+HOLO ORB TEST 06
+- Sphere shell is now a truly fixed 2D CSS overlay. It never rotates or changes transparency with tilt.
+- Shell: almost transparent center, milky outer rim, fixed highlights, subtle holo rim.
+- Inclusions: mostly micro-sized, with a small minority slightly larger.
+- Rare inclusions periodically flare brighter; particles are additive light only, never dark.
+- ? color remains highly tilt-sensitive.
+NOTE: This test prioritizes shell/inclusion behavior. ? geometry will continue to be refined separately.
