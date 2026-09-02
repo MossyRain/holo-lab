@@ -1,9 +1,15 @@
-HOLO ORB TEST 08
-- Tilt easing removed completely.
-- Direct sensor response for lower latency.
-- Cached inclusion glow sprites instead of per-frame gradients.
-- Inclusion count reduced to 300.
-- DPR capped at 1.5.
-- Fixed 2D shell retained.
-- Rare inclusion flare retained.
-- ? face stays uniform-color and changes strongly with tilt.
+HOLO LAB — ? ORB TEST 09
+
+Changes from TEST 08:
+- Restored and fixed the evaluation UI.
+- Always shows LEFT and RIGHT stereo panels.
+- TILT ON button is always visible in the header.
+- Added RESET button.
+- RESET uses the current device attitude as the new neutral/zero pose.
+- Added explicit TEST 09 version display.
+- Kept the low-latency rendering approach from TEST 08:
+  no tilt easing,
+  cached inclusion glow sprites,
+  DPR cap 1.5,
+  direct sensor response.
+- Fixed 2D shell remains independent from device tilt.

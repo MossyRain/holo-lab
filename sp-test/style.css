@@ -1,1 +1,23 @@
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030304;color:#eee;font-family:-apple-system,BlinkMacSystemFont,sans-serif}#app{height:100%;display:flex;flex-direction:column;padding:8px 12px}header{height:38px;display:flex;align-items:center;gap:14px;font-size:10px;letter-spacing:.12em}header span{opacity:.5}button{margin-left:auto;background:#151515;color:#eee;border:1px solid #444;border-radius:999px;padding:7px 12px}main{flex:1;min-height:0;display:flex;gap:12px;align-items:center;justify-content:center}.eye{position:relative;height:min(76vh,42vw);aspect-ratio:1;background:#050507;border:1px solid #222;overflow:hidden}canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}.shell{position:absolute;inset:6%;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse at 27% 18%,rgba(255,255,255,.52) 0 .8%,rgba(255,255,255,.18) 1.8%,rgba(255,255,255,.055) 3.8%,transparent 7.2%),radial-gradient(circle at 72% 18%,rgba(255,255,255,.96) 0 .42%,rgba(255,255,255,.42) .8%,rgba(255,255,255,.10) 1.6%,transparent 3%),radial-gradient(circle,transparent 0 73%,rgba(236,239,247,.015) 78%,rgba(240,242,249,.045) 85%,rgba(246,247,251,.11) 91%,rgba(250,251,254,.20) 96%,rgba(255,255,255,.29) 99%,transparent 100%);box-shadow:inset 8px 3px 18px rgba(185,215,255,.05),inset -8px -4px 18px rgba(255,200,240,.04)}.shell:after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 15deg,rgba(255,120,230,.18),rgba(115,220,255,.13),rgba(150,255,220,.07),rgba(255,230,130,.13),rgba(180,125,255,.15),rgba(255,120,230,.18));-webkit-mask:radial-gradient(circle,transparent 0 92.4%,#000 95.3%,transparent 99.4%)}small{position:absolute;left:8px;bottom:7px;font-size:8px;opacity:.3}footer{height:24px;text-align:center;font-size:9px;opacity:.4;padding-top:7px}@media(orientation:portrait){#app{position:absolute;width:100vh;height:100vw;left:0;top:100%;transform-origin:0 0;transform:rotate(-90deg)}}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030304;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+#app{height:100%;display:flex;flex-direction:column;padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+header{height:40px;display:flex;align-items:center;gap:14px;font-size:10px;letter-spacing:.12em;flex:0 0 auto}
+header b{font-size:12px}
+header span{opacity:.5}
+.controls{margin-left:auto;display:flex;gap:8px}
+button{background:#151515;color:#eee;border:1px solid #444;border-radius:999px;padding:7px 11px;font-size:10px}
+main{flex:1;min-height:0;display:flex;gap:12px;align-items:center;justify-content:center}
+.eye{position:relative;height:min(74vh,41vw);aspect-ratio:1/1;background:#050507;border:1px solid #222;overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.shell{position:absolute;inset:6%;border-radius:50%;pointer-events:none;
+background:
+radial-gradient(ellipse at 27% 18%,rgba(255,255,255,.50) 0 .8%,rgba(255,255,255,.18) 1.8%,rgba(255,255,255,.05) 3.8%,transparent 7.2%),
+radial-gradient(circle at 72% 18%,rgba(255,255,255,.96) 0 .42%,rgba(255,255,255,.42) .8%,rgba(255,255,255,.10) 1.6%,transparent 3%),
+radial-gradient(circle,transparent 0 73%,rgba(236,239,247,.015) 78%,rgba(240,242,249,.045) 85%,rgba(246,247,251,.11) 91%,rgba(250,251,254,.20) 96%,rgba(255,255,255,.29) 99%,transparent 100%);
+box-shadow:inset 8px 3px 18px rgba(185,215,255,.05),inset -8px -4px 18px rgba(255,200,240,.04)}
+.shell:after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 15deg,rgba(255,120,230,.18),rgba(115,220,255,.13),rgba(150,255,220,.07),rgba(255,230,130,.13),rgba(180,125,255,.15),rgba(255,120,230,.18));-webkit-mask:radial-gradient(circle,transparent 0 92.4%,#000 95.3%,transparent 99.4%);mask:radial-gradient(circle,transparent 0 92.4%,#000 95.3%,transparent 99.4%)}
+small{position:absolute;left:8px;bottom:7px;font-size:8px;opacity:.30}
+footer{height:24px;text-align:center;font-size:9px;opacity:.4;padding-top:7px;flex:0 0 auto}
+@media(orientation:portrait){
+  #app{position:absolute;width:100vh;height:100vw;left:0;top:100%;transform-origin:0 0;transform:rotate(-90deg)}
+}
