@@ -1,7 +1,32 @@
-HOLO ORB TEST 06
-- Sphere shell is now a truly fixed 2D CSS overlay. It never rotates or changes transparency with tilt.
-- Shell: almost transparent center, milky outer rim, fixed highlights, subtle holo rim.
-- Inclusions: mostly micro-sized, with a small minority slightly larger.
-- Rare inclusions periodically flare brighter; particles are additive light only, never dark.
-- ? color remains highly tilt-sensitive.
-NOTE: This test prioritizes shell/inclusion behavior. ? geometry will continue to be refined separately.
+HOLO LAB — ? ORB 3D TEST 07
+
+Purpose
+- Fix the TEST 06 rendering failure.
+- Keep the target shell/inclusion look while making the internal content reliably visible on iPhone Safari.
+
+Changes
+- Removed WebGL entirely for this test and switched the internal renderer to Canvas 2D + manual 3D projection.
+  This avoids the shader/rendering issue seen in TEST 06.
+- Sphere shell remains a completely fixed 2D CSS overlay.
+- Shell center has no dark fill at all.
+- Shell appearance is made only from:
+  edge milkiness / subtle holo rim / fixed material highlights.
+- Inclusions:
+  mostly micro-size,
+  some slightly larger,
+  a very small minority larger/brighter,
+  periodic twinkle,
+  occasional stronger flare,
+  additive light only,
+  never black/dark particles.
+- Question:
+  front face is one uniform color,
+  a small tilt causes a large whole-face hue shift,
+  side faces use a different uniform hue,
+  dot is treated separately as a short sideways cylinder.
+
+Files
+- index.html
+- style.css
+- app.js
+- README.txt
