@@ -1,12 +1,11 @@
-HOLO LAB — ? ORB TEST 04
+HOLO LAB — ? ORB 3D TEST 05
 
-04 changes
-- Sphere shell moved to a fixed 2D layer: center stays transparent, edge stays milky regardless of tilt.
-- Fixed material highlights only; no character/flame reflection and no refraction.
-- ? is a continuous extruded glyph solid, not blocks/particles.
-- Dot is a separate sideways cylinder. Its diameter equals extrusion depth; ? uses the same depth.
-- A planar face uses one uniform holo color. Small tilt changes the whole face color strongly.
-- Side faces can differ because their normal differs.
-- Inclusions are much smaller, 520 points, with subtle size variation only within a small range.
-- Inclusions are additive light only: no shaded/dark side and no shadow.
-- ZIP contains index.html, style.css, app.js, README.txt.
+Main changes from 04:
+- ? body is treated as a flat-front 2D silhouette extruded in depth, not a rounded tube.
+- Dot is a separate solid cylinder.
+- Same plane uses the same holo color.
+- Small tilt changes the entire face color strongly.
+- Inclusions are much smaller and limited to a narrow size range.
+- Inclusions are glow-only; no dark/black particle state.
+- Shell is lighter/more transparent, with only edge milkiness and material highlights.
+- No refraction and no scene-object reflections.
