@@ -13,7 +13,11 @@ for(let i=0;i<210;i++){
   P.push({p:[X,Y,Z],r,h:RN(),x:(RN()*2-1)*MAX,y:(RN()*2-1)*MAX,w:.022+RN()*.05})
 }
 function inc(g,w,h,e){
-  g.save();g.globalCompositeOperation="lighter";
+  g.save();
+  // TEST 16: inclusions exist only inside the orb volume.
+  // Match the CSS shell inset (6%) so no particles can leak into the square background.
+  g.beginPath();g.arc(w*.5,h*.5,Math.min(w,h)*.44,0,T);g.clip();
+  g.globalCompositeOperation="lighter";
   for(let a of P){
     let p=pr(rot(a.p),w,h,e),dx=ax-a.x,dy=ay-a.y,d=Math.hypot(dx,dy);
     let f=Math.exp(-d*d/(2*a.w*a.w)), r=Math.max(1.1,a.r*w/430);
@@ -40,30 +44,41 @@ function inc(g,w,h,e){
 }
 function ques(g,w,h,e){
   let hue=fr(.1+(ax/MAX)*.72+(ay/MAX)*.43), s=Math.min(w,h)*.31/1.45;
-  let slices=18;
+  let slices=22;
   for(let k=0;k<slices;k++){
     let z=-.13+k*(.26/(slices-1)), q=pr(rot([0,0,z]),w,h,e);
-    let t=k/(slices-1);
     g.save();g.translate(q[0],q[1]);g.scale(s,-s);
-    // Curved-side approximation: continuous spectral progression through depth.
-    g.fillStyle=hsv(hue+.10+.72*t+(ax/MAX)*.18+(ay/MAX)*.11,.92,.82);
+
+    // TEST 16: side colour is U-driven, not V/depth-driven.
+    // A conic spectral field follows the hook's bend; all depth slices share
+    // the same U phase, so thickness no longer creates rainbow bands.
+    let ug=g.createConicGradient(
+      -Math.PI*.64 + (ax/MAX)*.92 - (ay/MAX)*.28,
+      -.02,.42
+    );
+    let phase=fr(hue+.08+(ax/MAX)*.18+(ay/MAX)*.07);
+    for(let j=0;j<=12;j++){
+      let u=j/12;
+      ug.addColorStop(u,hsv(phase+u*.92,.94,.86+.12*Math.sin(Math.PI*u)));
+    }
+    g.fillStyle=ug;
     qp(g);g.fill();g.restore();
   }
+
   let cen=pr(rot([0,0,.13]),w,h,e);
   g.save();g.translate(cen[0],cen[1]);g.scale(s,-s);
-  // Front plane is intentionally one coherent color.
+  // Front plane stays coherent; the U-rainbow belongs primarily to the curved side.
   g.fillStyle=hsv(hue,.91,1);qp(g);g.fill();g.restore();
 
-  // Dot: short cylinder; side is spectral, front circular face is coherent.
+  // Dot: same principle. Side colour varies around its circumference (U),
+  // rather than along cylinder depth (V).
   let f=pr(rot([0,-.57,.13]),w,h,e), b=pr(rot([0,-.57,-.13]),w,h,e);
   let rr=Math.min(w,h)*.037;
-  let dg=g.createLinearGradient(b[0],b[1],f[0],f[1]);
-  dg.addColorStop(0,hsv(hue+.62,.92,.78));
-  dg.addColorStop(.35,hsv(hue+.35,.92,.92));
-  dg.addColorStop(.7,hsv(hue+.14,.92,.98));
-  dg.addColorStop(1,hsv(hue,.92,1));
-  g.fillStyle=dg;g.beginPath();
-  g.ellipse((f[0]+b[0])/2,(f[1]+b[1])/2,rr+Math.hypot(f[0]-b[0],f[1]-b[1])/2,rr*.96,0,0,T);g.fill();
+  let cx=(f[0]+b[0])/2,cy=(f[1]+b[1])/2;
+  let sideR=rr+Math.hypot(f[0]-b[0],f[1]-b[1])/2;
+  let dg=g.createConicGradient((ax/MAX)*1.1,cx,cy);
+  for(let j=0;j<=10;j++){let u=j/10;dg.addColorStop(u,hsv(hue+.08+u*.9,.93,.92))}
+  g.fillStyle=dg;g.beginPath();g.ellipse(cx,cy,sideR,rr*.96,0,0,T);g.fill();
   g.fillStyle=hsv(hue,.91,1);g.beginPath();g.arc(f[0],f[1],rr,0,T);g.fill()
 }
 function setup(c,e){let g=c.getContext("2d",{alpha:false,desynchronized:true});return()=>{let d=Math.min(devicePixelRatio||1,1.5),w=c.clientWidth*d|0,h=c.clientHeight*d|0;if(c.width!=w||c.height!=h){c.width=w;c.height=h}g.fillStyle="#050507";g.fillRect(0,0,w,h);inc(g,w,h,e);ques(g,w,h,e)}}let D=[setup(C[0],-1),setup(C[1],1)];
