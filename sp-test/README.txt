@@ -1,7 +1,16 @@
-HOLO LAB — ? ORB TEST 14
-- Deliberate large-step experiment from TEST 13.
-- Sphere shell opacity / body shading increased dramatically so the shell reads as a physical layer.
-- Inclusion field projection spread increased roughly 3.25× in X/Y (about 10× projected area) and particles strengthened, moving them away from the central cluster.
-- Inclusion depth retained; distribution is still volumetric rather than a flat overlay.
-- ? extrusion uses 18 depth slices with a continuous hue sweep to make curved side surfaces read more clearly.
-- TEST 13 stereo, TILT ON, RESET, ±30° geometry limit and smoothing retained.
+HOLO LAB — ? ORB TEST 15
+Base: TEST 13.
+
+This is intentionally a large-change diagnostic version.
+
+- Sphere shell: Fresnel/milky region made dramatically wider and stronger.
+- Shell center remains transparent.
+- Added restrained iridescent material tint around the shell.
+- Inclusions: previous largest size is now approximately the NEW minimum size.
+- Inclusion count reduced to keep open space despite much larger particles.
+- Inclusion volume expanded close to the shell instead of clustering around the center.
+- No time animation: brightening remains viewing-angle driven only.
+- ? geometry angle and ±30° limit retained.
+- ? front face remains one coherent hue at a given tilt.
+- ? side/depth is subdivided into many slices with a continuous spectral sweep to make curved-side holo behavior visibly testable.
+- Dot remains a separate short cylinder; front is coherent, cylindrical depth is spectral.
