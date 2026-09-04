@@ -2,84 +2,145 @@
 function hsv(h,s=.9,v=1){h=fr(h)*6;let i=h|0,f=h-i,p=v*(1-s),q=v*(1-s*f),t=v*(1-s*(1-f)),c=[[v,t,p],[q,v,p],[p,v,t],[p,q,v],[t,p,v],[v,p,q]][i%6];return`rgb(${c[0]*255|0},${c[1]*255|0},${c[2]*255|0})`}
 function rot(p){let[X,Y,Z]=p,cy=Math.cos(ax),sy=Math.sin(ax),x=cy*X+sy*Z,z=-sy*X+cy*Z,cx=Math.cos(ay),sx=Math.sin(ay);return[x,cx*Y-sx*z,sx*Y+cx*z]}
 function pr(p,w,h,e){let z=p[2]+3.5,f=Math.min(w,h)*1.28;return[w/2+(p[0]+e*.035)*f/z,h/2-p[1]*f/z]}
-function qp(g){g.beginPath();g.moveTo(-.42,.58);g.bezierCurveTo(-.4,.88,-.12,1.02,.18,.96);g.bezierCurveTo(.54,.9,.7,.68,.66,.42);g.bezierCurveTo(.63,.22,.49,.1,.32,-.02);g.bezierCurveTo(.14,-.15,.08,-.25,.08,-.43);g.lineTo(.08,-.54);g.lineTo(-.18,-.54);g.lineTo(-.18,-.39);g.bezierCurveTo(-.18,-.1,-.03,.06,.17,.21);g.bezierCurveTo(.32,.32,.39,.4,.39,.51);g.bezierCurveTo(.39,.65,.28,.72,.12,.75);g.bezierCurveTo(-.04,.78,-.16,.7,-.18,.56);g.closePath()}
+function qp(g){
+  g.beginPath();
+  g.moveTo(-.46,.56);
+  g.bezierCurveTo(-.45,.90,-.14,1.08,.22,1.00);
+  g.bezierCurveTo(.57,.93,.76,.70,.71,.40);
+  g.bezierCurveTo(.67,.19,.53,.06,.35,-.07);
+  g.bezierCurveTo(.17,-.20,.10,-.30,.10,-.48);
+  g.bezierCurveTo(.10,-.57,.06,-.61,-.02,-.61);
+  g.lineTo(-.20,-.61);
+  g.bezierCurveTo(-.29,-.61,-.33,-.56,-.33,-.47);
+  g.bezierCurveTo(-.33,-.14,-.16,.06,.07,.24);
+  g.bezierCurveTo(.23,.36,.31,.45,.30,.55);
+  g.bezierCurveTo(.29,.67,.19,.74,.05,.76);
+  g.bezierCurveTo(-.12,.78,-.24,.69,-.26,.54);
+  g.bezierCurveTo(-.28,.42,-.24,.31,-.14,.24);
+  g.lineTo(-.28,.08);
+  g.bezierCurveTo(-.43,.18,-.50,.35,-.46,.56);
+  g.closePath();
+}
 let seed=81173,RN=()=>{seed=seed*16807%2147483647;return(seed-1)/2147483646},P=[];
-for(let i=0;i<210;i++){
+for(let i=0;i<250;i++){
   let X,Y,Z;
-  // Broad volume distribution: deliberately reaches close to shell.
-  do{X=RN()*1.82-.91;Y=RN()*1.82-.91;Z=RN()*1.82-.91}
-  while(X*X+Y*Y+Z*Z>.80);
-  let u=RN(), r=u<.68?1.85+RN()*.75:u<.93?2.65+RN()*1.15:3.8+RN()*1.5;
-  P.push({p:[X,Y,Z],r,h:RN(),x:(RN()*2-1)*MAX,y:(RN()*2-1)*MAX,w:.022+RN()*.05})
+  do{
+    X=RN()*1.72-.86;Y=RN()*1.72-.86;Z=RN()*1.72-.86
+  }while(X*X+Y*Y+Z*Z>.72);
+  let u=RN();
+  let r=u<.72 ? 1.55+RN()*.55 : (u<.95 ? 2.5+RN()*1.0 : 4.0+RN()*1.8);
+  P.push({
+    p:[X,Y,Z],r,
+    h:RN(),
+    x:(RN()*2-1)*MAX,
+    y:(RN()*2-1)*MAX,
+    w:.020+RN()*.050,
+    flare:RN()
+  })
 }
 function inc(g,w,h,e){
   g.save();
-  // TEST 16: inclusions exist only inside the orb volume.
-  // Match the CSS shell inset (6%) so no particles can leak into the square background.
-  g.beginPath();g.arc(w*.5,h*.5,Math.min(w,h)*.44,0,T);g.clip();
+  g.beginPath();
+  g.arc(w*.5,h*.5,Math.min(w,h)*.44,0,T);
+  g.clip();
   g.globalCompositeOperation="lighter";
+
   for(let a of P){
-    let p=pr(rot(a.p),w,h,e),dx=ax-a.x,dy=ay-a.y,d=Math.hypot(dx,dy);
-    let f=Math.exp(-d*d/(2*a.w*a.w)), r=Math.max(1.1,a.r*w/430);
-    g.globalAlpha=.32+f*.66;
-    g.fillStyle=hsv(a.h+(ax/MAX)*.13+(ay/MAX)*.08,.62,.95);
+    let p=pr(rot(a.p),w,h,e);
+    let dx=ax-a.x,dy=ay-a.y,d=Math.hypot(dx,dy);
+    let f=Math.exp(-d*d/(2*a.w*a.w));
+    let r=Math.max(1.0,a.r*w/430);
+
+    g.globalAlpha=.24+f*.62;
+    g.fillStyle=hsv(a.h+(ax/MAX)*.12+(ay/MAX)*.07,.62,.98);
     g.beginPath();g.arc(p[0],p[1],r,0,T);g.fill();
-    if(f>.58){
-      let glow=r*(1.7+f*2.4);
-      let gr=g.createRadialGradient(p[0],p[1],0,p[0],p[1],glow);
-      gr.addColorStop(0,"rgba(255,255,255,.95)");
-      gr.addColorStop(.18,"rgba(255,255,255,.48)");
-      gr.addColorStop(1,"rgba(255,255,255,0)");
-      g.globalAlpha=f*.78;g.fillStyle=gr;
-      g.beginPath();g.arc(p[0],p[1],glow,0,T);g.fill();
-      if(f>.82&&a.r>3.2){
-        let q=r*(3.5+f*2);
-        g.globalAlpha=.62*f;g.strokeStyle="white";g.lineWidth=.65;
-        g.beginPath();g.moveTo(p[0]-q,p[1]);g.lineTo(p[0]+q,p[1]);
-        g.moveTo(p[0],p[1]-q);g.lineTo(p[0],p[1]+q);g.stroke();
-      }
+
+    let glow=r*(1.55+f*2.0);
+    let gr=g.createRadialGradient(p[0],p[1],0,p[0],p[1],glow);
+    gr.addColorStop(0,"rgba(255,255,255,.95)");
+    gr.addColorStop(.15,`rgba(255,255,255,${.35+.45*f})`);
+    gr.addColorStop(1,"rgba(255,255,255,0)");
+    g.globalAlpha=.20+f*.55;
+    g.fillStyle=gr;
+    g.beginPath();g.arc(p[0],p[1],glow,0,T);g.fill();
+
+    if(a.r>3.9 && f>.72){
+      let q=r*(3.0+f*2.5);
+      g.globalAlpha=.55*f;
+      g.strokeStyle="white";
+      g.lineWidth=.65;
+      g.beginPath();
+      g.moveTo(p[0]-q,p[1]);g.lineTo(p[0]+q,p[1]);
+      g.moveTo(p[0],p[1]-q);g.lineTo(p[0],p[1]+q);
+      g.stroke();
     }
   }
   g.restore()
 }
 function ques(g,w,h,e){
-  let hue=fr(.1+(ax/MAX)*.72+(ay/MAX)*.43), s=Math.min(w,h)*.31/1.45;
-  let slices=22;
-  for(let k=0;k<slices;k++){
-    let z=-.13+k*(.26/(slices-1)), q=pr(rot([0,0,z]),w,h,e);
-    g.save();g.translate(q[0],q[1]);g.scale(s,-s);
+  let hue=fr(.10+(ax/MAX)*.72+(ay/MAX)*.43);
+  let s=Math.min(w,h)*.31/1.45;
+  let slices=28;
 
-    // TEST 16: side colour is U-driven, not V/depth-driven.
-    // A conic spectral field follows the hook's bend; all depth slices share
-    // the same U phase, so thickness no longer creates rainbow bands.
+  for(let k=0;k<slices;k++){
+    let t=k/(slices-1);
+    let z=-.15+k*(.30/(slices-1));
+    let q=pr(rot([0,0,z]),w,h,e);
+    let bulge=1 + .035*Math.sin(Math.PI*t);
+
+    g.save();
+    g.translate(q[0],q[1]);
+    g.scale(s*bulge,-s*bulge);
+
     let ug=g.createConicGradient(
-      -Math.PI*.64 + (ax/MAX)*.92 - (ay/MAX)*.28,
-      -.02,.42
+      -Math.PI*.68 + (ax/MAX)*.98 - (ay/MAX)*.30,
+      -.03,.43
     );
-    let phase=fr(hue+.08+(ax/MAX)*.18+(ay/MAX)*.07);
-    for(let j=0;j<=12;j++){
-      let u=j/12;
-      ug.addColorStop(u,hsv(phase+u*.92,.94,.86+.12*Math.sin(Math.PI*u)));
+    let phase=fr(hue+.05+(ax/MAX)*.20+(ay/MAX)*.08);
+    for(let j=0;j<=16;j++){
+      let u=j/16;
+      let val=.82+.16*Math.sin(Math.PI*u);
+      ug.addColorStop(u,hsv(phase+u*.96,.94,val));
     }
+    g.globalAlpha=.90;
     g.fillStyle=ug;
-    qp(g);g.fill();g.restore();
+    qp(g);g.fill();
+    g.restore();
   }
 
-  let cen=pr(rot([0,0,.13]),w,h,e);
-  g.save();g.translate(cen[0],cen[1]);g.scale(s,-s);
-  // Front plane stays coherent; the U-rainbow belongs primarily to the curved side.
-  g.fillStyle=hsv(hue,.91,1);qp(g);g.fill();g.restore();
+  let cen=pr(rot([0,0,.15]),w,h,e);
+  g.save();
+  g.translate(cen[0],cen[1]);
+  g.scale(s,-s);
+  g.globalAlpha=.86;
+  g.fillStyle=hsv(hue,.82,1);
+  qp(g);g.fill();
 
-  // Dot: same principle. Side colour varies around its circumference (U),
-  // rather than along cylinder depth (V).
-  let f=pr(rot([0,-.57,.13]),w,h,e), b=pr(rot([0,-.57,-.13]),w,h,e);
-  let rr=Math.min(w,h)*.037;
-  let cx=(f[0]+b[0])/2,cy=(f[1]+b[1])/2;
-  let sideR=rr+Math.hypot(f[0]-b[0],f[1]-b[1])/2;
-  let dg=g.createConicGradient((ax/MAX)*1.1,cx,cy);
-  for(let j=0;j<=10;j++){let u=j/10;dg.addColorStop(u,hsv(hue+.08+u*.9,.93,.92))}
-  g.fillStyle=dg;g.beginPath();g.ellipse(cx,cy,sideR,rr*.96,0,0,T);g.fill();
-  g.fillStyle=hsv(hue,.91,1);g.beginPath();g.arc(f[0],f[1],rr,0,T);g.fill()
+  let hg=g.createLinearGradient(-.45,.70,.35,-.35);
+  hg.addColorStop(0,"rgba(255,255,255,.32)");
+  hg.addColorStop(.28,"rgba(255,255,255,.10)");
+  hg.addColorStop(.60,"rgba(255,255,255,0)");
+  g.globalAlpha=.42;
+  g.fillStyle=hg;
+  qp(g);g.fill();
+  g.restore();
+
+  let f=pr(rot([0,-.56,.13]),w,h,e);
+  let rr=Math.min(w,h)*.039;
+  let rg=g.createRadialGradient(
+    f[0]-rr*.28,f[1]-rr*.34,rr*.10,
+    f[0],f[1],rr
+  );
+  rg.addColorStop(0,"rgba(255,255,255,.96)");
+  rg.addColorStop(.18,hsv(hue+.18,.80,1));
+  rg.addColorStop(.52,hsv(hue+.48,.88,.95));
+  rg.addColorStop(.82,hsv(hue+.78,.90,.82));
+  rg.addColorStop(1,"rgba(255,255,255,.20)");
+  g.globalAlpha=.95;
+  g.fillStyle=rg;
+  g.beginPath();
+  g.ellipse(f[0],f[1],rr,rr*.92,0,0,T);
+  g.fill();
 }
 function setup(c,e){let g=c.getContext("2d",{alpha:false,desynchronized:true});return()=>{let d=Math.min(devicePixelRatio||1,1.5),w=c.clientWidth*d|0,h=c.clientHeight*d|0;if(c.width!=w||c.height!=h){c.width=w;c.height=h}g.fillStyle="#050507";g.fillRect(0,0,w,h);inc(g,w,h,e);ques(g,w,h,e)}}let D=[setup(C[0],-1),setup(C[1],1)];
 function loop(){ax+=(tx-ax)*.34;ay+=(ty-ay)*.34;D[0]();D[1]();requestAnimationFrame(loop)}loop();

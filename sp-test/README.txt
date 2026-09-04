@@ -1,13 +1,15 @@
-HOLO LAB — ? ORB TEST 16
-Base: TEST 15.
+HOLO LAB — ? ORB TEST 17
 
-Main change:
-- ? side rainbow direction changed from V/depth direction to U direction.
-- The curved side now uses a spectral field following the hook bend.
-- All depth slices share the same U phase, so the extrusion depth itself no longer makes rainbow bands.
-- Tilt shifts the U-direction rainbow smoothly while retaining the ±30° limit.
-- Dot side uses the same U/circumferential principle.
-- Front face remains a coherent hue.
-- Inclusions are now hard-clipped to the inside of the spherical shell, preventing leakage into the square background.
-- Inclusion size/distribution and the stronger TEST 15 shell are retained.
-- No time-driven inclusion blinking.
+Base: TEST 16.
+
+- ? silhouette redesigned as a sculpted object rather than a font-like extrusion.
+- Fuller crown, deeper inner scoop, tapered lower tail, asymmetrical molded mass.
+- Side rainbow remains U-direction driven.
+- Body cross-section is visually rounded by bulging middle depth slices.
+- Front cap is coherent in hue but more glassy/translucent.
+- Dot changed from cylinder-like appearance to a slightly flattened orb.
+- Inclusion size hierarchy: small majority / medium minority / few large inclusions.
+- Rare large inclusions produce stronger angle-triggered sparkles.
+- Inclusions remain fully clipped inside the orb.
+- No time-based blinking.
+- Added restrained localized shell edge sheen without adding central haze.
