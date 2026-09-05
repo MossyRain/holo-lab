@@ -1,5 +1,5 @@
 (()=>{
-const VERSION="20";
+const VERSION="21";
 const C=[L,R], MAX=Math.PI/6, T=Math.PI*2;
 let tx=0,ty=0,ax=0,ay=0,rg=0,rb=0,bg=0,bb=0,have=0,drag=0,lx=0,ly=0;
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v)), fr=v=>v-Math.floor(v);
@@ -61,15 +61,16 @@ function shell(g,w,h,e){
   // Transparent core + softly milky shell body. Avoid a white/gray glass-ball read.
   let base=g.createRadialGradient(cx,cy,R*.08,cx,cy,R);
   base.addColorStop(0,"rgba(5,7,12,.00)");
-  base.addColorStop(.52,"rgba(12,15,23,.015)");
-  base.addColorStop(.76,"rgba(90,105,125,.045)");
-  base.addColorStop(1,"rgba(150,165,188,.10)");
+  base.addColorStop(.45,"rgba(3,5,10,.00)");
+  base.addColorStop(.68,"rgba(16,20,30,.025)");
+  base.addColorStop(.82,"rgba(80,94,118,.055)");
+  base.addColorStop(1,"rgba(140,155,184,.095)");
   g.fillStyle=base;g.fillRect(cx-R,cy-R,R*2,R*2);
 
   // Broad 2D aurora-sheet fields. Large, low-contrast patches rather than a rainbow rim.
   const blobs=[
-    [-.60,-.52,.42,.22,1.05],[.02,-.72,.94,.19,1.15],[.66,-.35,.55,.18,.95],
-    [-.68,.42,.62,.18,1.02],[-.04,.70,.12,.22,1.18],[.65,.54,.82,.17,1.00]
+    [-.60,-.52,.42,.34,1.05],[.02,-.72,.94,.31,1.15],[.66,-.35,.55,.30,.95],
+    [-.68,.42,.62,.30,1.02],[-.04,.70,.12,.34,1.18],[.65,.54,.82,.29,1.00]
   ];
   for(let i=0;i<blobs.length;i++){
     let [bx,by,ph,op,sz]=blobs[i];
@@ -80,7 +81,7 @@ function shell(g,w,h,e){
     let hp=ph+ax*.16+ay*.09+eyePhase;
     gr.addColorStop(0,hsv(hp,.34,.98,op));
     gr.addColorStop(.38,hsv(hp+.055,.28,.98,op*.70));
-    gr.addColorStop(.72,hsv(hp+.11,.22,.97,op*.30));
+    gr.addColorStop(.72,hsv(hp+.11,.30,.97,op*.36));
     gr.addColorStop(1,"rgba(0,0,0,0)");
     g.fillStyle=gr;g.fillRect(cx-R,cy-R,R*2,R*2);
   }
@@ -88,26 +89,35 @@ function shell(g,w,h,e){
   // A faint complementary wash across the sphere keeps the aurora from reading only as an outline.
   let wash=g.createLinearGradient(cx-R*.9,cy-R*.8,cx+R*.85,cy+R*.75);
   let wp=ax*.12-ay*.08+eyePhase;
-  wash.addColorStop(0,hsv(.46+wp,.26,.98,.055));
-  wash.addColorStop(.36,hsv(.92+wp,.22,.98,.045));
-  wash.addColorStop(.70,hsv(.63+wp,.24,.98,.045));
-  wash.addColorStop(1,hsv(.13+wp,.24,.98,.050));
+  wash.addColorStop(0,hsv(.46+wp,.38,.98,.085));
+  wash.addColorStop(.36,hsv(.92+wp,.34,.98,.070));
+  wash.addColorStop(.70,hsv(.63+wp,.36,.98,.072));
+  wash.addColorStop(1,hsv(.13+wp,.36,.98,.080));
   g.fillStyle=wash;g.fillRect(cx-R,cy-R,R*2,R*2);
 
-  // Crisp, bounded reflections. They are clipped to the sphere and move with viewpoint.
-  let hx=cx-R*.50+(ax/MAX)*R*.24+e*R*.012;
-  let hy=cy-R*.56+(ay/MAX)*R*.18;
-  g.save();g.translate(hx,hy);g.rotate(-.20+ax*.34);
-  g.fillStyle="rgba(255,255,255,.78)";
-  g.fillRect(-R*.15,-R*.045,R*.29,R*.075);
-  g.fillRect(-R*.13,R*.045,R*.19,R*.035);
-  g.restore();
-
-  let sx=cx+R*.58-(ax/MAX)*R*.17, sy=cy-R*.50-(ay/MAX)*R*.13;
-  g.save();g.translate(sx,sy);g.rotate(.20-ay*.4);
-  g.fillStyle="rgba(255,255,255,.82)";
-  g.fillRect(-R*.045,-R*.024,R*.090,R*.048);
-  g.restore();
+  // TEST21: large area-light reflections projected onto the sphere.
+  // Crisp boundaries, but curved/foreshortened so they cannot read as paper rectangles.
+  function windowPatch(nx,ny,ww,hh,skew,alpha){
+    const vx=(ax/MAX)*.20 + e*.012, vy=(ay/MAX)*.16;
+    let x=cx+(nx+vx)*R, y=cy+(ny+vy)*R;
+    // local sphere foreshortening: stronger toward rim
+    let rr=Math.hypot((x-cx)/R,(y-cy)/R), fo=Math.sqrt(Math.max(.16,1-rr*rr));
+    let W=ww*R*fo, H=hh*R*(.70+.30*fo);
+    g.save();g.translate(x,y);g.rotate(skew+ax*.22-ay*.12);
+    let tint=hsv(.52+ax*.08-ay*.05+eyePhase,.10,1,alpha);
+    g.fillStyle=tint;
+    // curved quadrilateral, representing a rectangular softbox/window on a sphere
+    g.beginPath();
+    g.moveTo(-W*.55,-H*.46);
+    g.quadraticCurveTo(0,-H*.62,W*.55,-H*.38);
+    g.lineTo(W*.48,H*.42);
+    g.quadraticCurveTo(0,H*.27,-W*.50,H*.48);
+    g.closePath();g.fill();
+    g.restore();
+  }
+  windowPatch(-.48,-.54,.48,.15,-.16,.68);
+  windowPatch(-.45,-.39,.30,.075,-.16,.50);
+  windowPatch(.54,-.48,.18,.075,.16,.58);
   g.restore();
 
   // Thin colored optical edge only; aurora itself lives on the shell surface above.
@@ -160,7 +170,7 @@ function ques(g,w,h,e){
   const edgeW=stemW*.08;
 
   // Rear B-rep boundary FIRST, so solid side/front geometry correctly occludes hidden portions.
-  g.save();g.translate(back[0],back[1]);g.scale(S,-S);
+  g.save();g.translate(back[0],back[1]);g.scale(S,-S);g.transform(1,0,-.10,1,0,0);
   qp(g);g.lineJoin="round";g.lineCap="round";g.lineWidth=edgeW/S;
   g.strokeStyle=hsv(hue+.43,.92,.72);g.stroke();g.restore();
 
@@ -169,7 +179,7 @@ function ques(g,w,h,e){
   const slices=28;
   for(let k=0;k<slices;k++){
     let t=k/(slices-1),z=zBack+(zFront-zBack)*t,q=pr(rot([0,0,z]),w,h,e);
-    g.save();g.translate(q[0],q[1]);g.scale(S,-S);
+    g.save();g.translate(q[0],q[1]);g.scale(S,-S);g.transform(1,0,-.10,1,0,0);
     let ug=g.createLinearGradient(-.58,.10,.78,.10);
     let phase=fr(hue+.12+(ax/MAX)*.10);
     ug.addColorStop(0,hsv(phase+.00,.91,.82));
@@ -181,7 +191,7 @@ function ques(g,w,h,e){
   }
 
   // Front plane: one uniform opaque holo color at any instant.
-  g.save();g.translate(front[0],front[1]);g.scale(S,-S);
+  g.save();g.translate(front[0],front[1]);g.scale(S,-S);g.transform(1,0,-.10,1,0,0);
   qp(g);g.fillStyle=hsv(hue,.90,.96);g.fill();
   g.lineJoin="round";g.lineCap="round";g.lineWidth=edgeW/S;
   g.strokeStyle=hsv(hue+.18,.95,.66);g.stroke();g.restore();
