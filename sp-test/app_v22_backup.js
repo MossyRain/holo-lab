@@ -1,5 +1,5 @@
 (()=>{
-const VERSION="23";
+const VERSION="22";
 const C=[L,R], MAX=Math.PI/6, T=Math.PI*2;
 let tx=0,ty=0,ax=0,ay=0,rg=0,rb=0,bg=0,bb=0,have=0,drag=0,lx=0,ly=0;
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v)), fr=v=>v-Math.floor(v);
@@ -10,13 +10,6 @@ function hsv(h,s=.9,v=1,a=1){
   return `rgba(${c[0]*255|0},${c[1]*255|0},${c[2]*255|0},${a})`;
 }
 function rot(p){let[X,Y,Z]=p,cy=Math.cos(ax),sy=Math.sin(ax),x=cy*X+sy*Z,z=-sy*X+cy*Z,cx=Math.cos(ay),sx=Math.sin(ay);return[x,cx*Y-sx*z,sx*Y+cx*z]}
-function rotQ(p){
-  // TEST23: the whole ? (hook AND dot) shares one actual 3D orientation.
-  // A small neutral pose exposes extrusion without exceeding the ±30° stereo comfort range.
-  const yaw=ax+0.14, pitch=ay-0.09;
-  let[X,Y,Z]=p,cy=Math.cos(yaw),sy=Math.sin(yaw),x=cy*X+sy*Z,z=-sy*X+cy*Z,cx=Math.cos(pitch),sx=Math.sin(pitch);
-  return[x,cx*Y-sx*z,sx*Y+cx*z];
-}
 function pr(p,w,h,e){let z=p[2]+3.5,f=Math.min(w,h)*1.28;return[w/2+(p[0]+e*.035)*f/z,h/2-p[1]*f/z]}
 
 /* front outline:
@@ -62,107 +55,81 @@ function shell(g,w,h,e){
   let cx=w*.5,cy=h*.5,R=Math.min(w,h)*.44;
   let eyePhase=e*.026;
 
-  // The aurora IS the shell appearance. There is no independent milky-white layer.
-  // Its opacity is derived from sphere curvature: face-on center -> transparent,
-  // grazing outer surface -> increasingly visible.
-  const off=document.createElement("canvas"); off.width=w; off.height=h;
-  const o=off.getContext("2d");
-  o.save();o.beginPath();o.arc(cx,cy,R,0,T);o.clip();
+  g.save();
+  g.beginPath();g.arc(cx,cy,R,0,T);g.clip();
 
-  // Broad, low-frequency 2D aurora-sheet color fields.
+  // Transparent core + softly milky shell body. Avoid a white/gray glass-ball read.
+  let base=g.createRadialGradient(cx,cy,R*.08,cx,cy,R);
+  base.addColorStop(0,"rgba(5,7,12,.00)");
+  base.addColorStop(.45,"rgba(3,5,10,.00)");
+  base.addColorStop(.68,"rgba(16,20,30,.025)");
+  base.addColorStop(.82,"rgba(80,94,118,.055)");
+  base.addColorStop(1,"rgba(140,155,184,.095)");
+  g.fillStyle=base;g.fillRect(cx-R,cy-R,R*2,R*2);
+
+  // Broad 2D aurora-sheet fields. Large, low-contrast patches rather than a rainbow rim.
   const blobs=[
-    [-.60,-.52,.42,.50,1.12],[.02,-.72,.94,.46,1.20],[.66,-.35,.55,.44,1.05],
-    [-.68,.42,.62,.46,1.10],[-.04,.70,.12,.50,1.24],[.65,.54,.82,.44,1.08]
+    [-.60,-.52,.42,.34,1.05],[.02,-.72,.94,.31,1.15],[.66,-.35,.55,.30,.95],
+    [-.68,.42,.62,.30,1.02],[-.04,.70,.12,.34,1.18],[.65,.54,.82,.29,1.00]
   ];
   for(let i=0;i<blobs.length;i++){
     let [bx,by,ph,op,sz]=blobs[i];
     let x=cx+bx*R+Math.sin(ax*1.7+i*.91+eyePhase*7)*R*.10;
     let y=cy+by*R+Math.cos(ay*1.6+i*.73-eyePhase*5)*R*.09;
     let rr=R*sz;
-    let gr=o.createRadialGradient(x,y,0,x,y,rr);
+    let gr=g.createRadialGradient(x,y,0,x,y,rr);
     let hp=ph+ax*.16+ay*.09+eyePhase;
-    gr.addColorStop(0,hsv(hp,.42,.98,op));
-    gr.addColorStop(.38,hsv(hp+.055,.36,.98,op*.78));
-    gr.addColorStop(.72,hsv(hp+.11,.38,.97,op*.44));
+    gr.addColorStop(0,hsv(hp,.34,.98,op));
+    gr.addColorStop(.38,hsv(hp+.055,.28,.98,op*.70));
+    gr.addColorStop(.72,hsv(hp+.11,.30,.97,op*.36));
     gr.addColorStop(1,"rgba(0,0,0,0)");
-    o.fillStyle=gr;o.fillRect(cx-R,cy-R,R*2,R*2);
+    g.fillStyle=gr;g.fillRect(cx-R,cy-R,R*2,R*2);
   }
-  let wash=o.createLinearGradient(cx-R*.9,cy-R*.8,cx+R*.85,cy+R*.75);
+
+  // A faint complementary wash across the sphere keeps the aurora from reading only as an outline.
+  let wash=g.createLinearGradient(cx-R*.9,cy-R*.8,cx+R*.85,cy+R*.75);
   let wp=ax*.12-ay*.08+eyePhase;
-  wash.addColorStop(0,hsv(.46+wp,.44,.98,.15));
-  wash.addColorStop(.36,hsv(.92+wp,.40,.98,.13));
-  wash.addColorStop(.70,hsv(.63+wp,.42,.98,.13));
-  wash.addColorStop(1,hsv(.13+wp,.42,.98,.15));
-  o.fillStyle=wash;o.fillRect(cx-R,cy-R,R*2,R*2);
-  o.restore();
+  wash.addColorStop(0,hsv(.46+wp,.38,.98,.085));
+  wash.addColorStop(.36,hsv(.92+wp,.34,.98,.070));
+  wash.addColorStop(.70,hsv(.63+wp,.36,.98,.072));
+  wash.addColorStop(1,hsv(.13+wp,.36,.98,.080));
+  g.fillStyle=wash;g.fillRect(cx-R,cy-R,R*2,R*2);
 
-  // Curvature opacity mask. r/R = sin(theta), theta is the angle between
-  // the local shell normal and the viewing direction. This is intentionally
-  // NOT a simple linear radial fade.
-  o.globalCompositeOperation="destination-in";
-  const mask=o.createImageData(w,h), d=mask.data;
-  for(let y=Math.max(0,(cy-R)|0);y<Math.min(h,(cy+R+1)|0);y++){
-    for(let x=Math.max(0,(cx-R)|0);x<Math.min(w,(cx+R+1)|0);x++){
-      let nx=(x-cx)/R, ny=(y-cy)/R, r=Math.hypot(nx,ny);
-      if(r>1) continue;
-      let theta=Math.asin(cl(r,0,1))/(Math.PI/2); // 0 center -> 1 rim
-      // broad transparent center, then smooth curvature-driven rise
-      let q=cl((theta-.16)/.84,0,1);
-      let a=q*q*(3-2*q);
-      let k=(y*w+x)*4; d[k]=d[k+1]=d[k+2]=255; d[k+3]=(a*255)|0;
-    }
+  // TEST21: large area-light reflections projected onto the sphere.
+  // Crisp boundaries, but curved/foreshortened so they cannot read as paper rectangles.
+  function windowPatch(nx,ny,ww,hh,skew,alpha){
+    const vx=(ax/MAX)*.20 + e*.012, vy=(ay/MAX)*.16;
+    let x=cx+(nx+vx)*R, y=cy+(ny+vy)*R;
+    // local sphere foreshortening: stronger toward rim
+    let rr=Math.hypot((x-cx)/R,(y-cy)/R), fo=Math.sqrt(Math.max(.16,1-rr*rr));
+    let W=ww*R*fo, H=hh*R*(.70+.30*fo);
+    g.save();g.translate(x,y);g.rotate(skew+ax*.22-ay*.12);
+    let tint=hsv(.52+ax*.08-ay*.05+eyePhase,.10,1,alpha);
+    g.fillStyle=tint;
+    // curved quadrilateral, representing a rectangular softbox/window on a sphere
+    g.beginPath();
+    g.moveTo(-W*.55,-H*.46);
+    g.quadraticCurveTo(0,-H*.62,W*.55,-H*.38);
+    g.lineTo(W*.48,H*.42);
+    g.quadraticCurveTo(0,H*.27,-W*.50,H*.48);
+    g.closePath();g.fill();
+    g.restore();
   }
-  const mc=document.createElement("canvas");mc.width=w;mc.height=h;
-  mc.getContext("2d").putImageData(mask,0,0);
-  o.drawImage(mc,0,0);
-  o.globalCompositeOperation="source-over";
-  g.drawImage(off,0,0);
+  windowPatch(-.48,-.54,.48,.15,-.16,.68);
+  windowPatch(-.45,-.39,.30,.075,-.16,.50);
+  windowPatch(.54,-.48,.18,.075,.16,.58);
+  g.restore();
 
-  // Sphere-surface highlight patch. Defined by latitude/longitude-like coordinates
-  // around a local pole; projection alone bends and foreshortens the rectangular source.
-  function sphPoint(lon,lat,poleLon,poleLat){
-    // local patch around +Z, then rotate its pole on the sphere
-    let x=Math.sin(lon)*Math.cos(lat), y=Math.sin(lat), z=Math.cos(lon)*Math.cos(lat);
-    // pitch around X
-    let cp=Math.cos(poleLat),sp=Math.sin(poleLat);
-    let y1=cp*y-sp*z,z1=sp*y+cp*z;
-    // yaw around Y
-    let cyy=Math.cos(poleLon),syy=Math.sin(poleLon);
-    return [cyy*x+syy*z1,y1,-syy*x+cyy*z1];
-  }
-  function projSphere(p){return[cx+p[0]*R,cy-p[1]*R,p[2]]}
-  function highlightPatch(pLon,pLat,lonHalf,latHalf,alpha){
-    // viewpoint moves the reflection pole across the sphere
-    pLon += ax*.72 + e*.018;
-    pLat += ay*.62;
-    const N=12, pts=[];
-    // boundary: top, right, bottom, left in local lon/lat coordinates
-    for(let i=0;i<=N;i++) pts.push(sphPoint(-lonHalf+2*lonHalf*i/N, latHalf,pLon,pLat));
-    for(let i=1;i<=N;i++) pts.push(sphPoint(lonHalf,latHalf-2*latHalf*i/N,pLon,pLat));
-    for(let i=1;i<=N;i++) pts.push(sphPoint(lonHalf-2*lonHalf*i/N,-latHalf,pLon,pLat));
-    for(let i=1;i<N;i++) pts.push(sphPoint(-lonHalf,-latHalf+2*latHalf*i/N,pLon,pLat));
-    // hide patches that have moved entirely behind the visible hemisphere
-    if(!pts.some(p=>p[2]>0)) return;
-    g.save();g.beginPath();
-    let first=true;
-    for(let p of pts){if(p[2]<=0) continue;let q=projSphere(p);if(first){g.moveTo(q[0],q[1]);first=false}else g.lineTo(q[0],q[1])}
-    if(first){g.restore();return}g.closePath();
-    // slightly tinted area-light reflection, crisp boundary, not paper-white
-    g.fillStyle=hsv(.50+ax*.06-ay*.04+eyePhase,.10,1,alpha);g.fill();g.restore();
-  }
-  highlightPatch(-.56,.22,.17,.075,.62);
-  highlightPatch(-.50,.08,.105,.040,.43);
-  highlightPatch(.48,.30,.065,.035,.50);
-
-  // Thin optical boundary only.
-  g.save();g.beginPath();g.arc(cx,cy,R,0,T);g.lineWidth=R*.014;
+  // Thin colored optical edge only; aurora itself lives on the shell surface above.
+  g.save();g.beginPath();g.arc(cx,cy,R,0,T);g.lineWidth=R*.018;
   let rim=g.createLinearGradient(cx-R,cy-R,cx+R,cy+R),rp=ax*.18+ay*.07+eyePhase;
-  rim.addColorStop(0,hsv(.46+rp,.52,.96,.54));
-  rim.addColorStop(.34,hsv(.90+rp,.48,.96,.47));
-  rim.addColorStop(.68,hsv(.59+rp,.50,.96,.45));
-  rim.addColorStop(1,hsv(.13+rp,.52,.96,.52));
+  rim.addColorStop(0,hsv(.46+rp,.48,.96,.52));
+  rim.addColorStop(.34,hsv(.90+rp,.42,.96,.45));
+  rim.addColorStop(.68,hsv(.59+rp,.44,.96,.42));
+  rim.addColorStop(1,hsv(.13+rp,.46,.96,.50));
   g.strokeStyle=rim;g.stroke();g.restore();
 }
+
 function inc(g,w,h,e){
   g.save();
   g.beginPath();g.arc(w*.5,h*.5,Math.min(w,h)*.42,0,T);g.clip();
@@ -198,7 +165,7 @@ function ques(g,w,h,e){
   const S=Math.min(w,h)*.372/1.45;
   // straight extrusion; no bevel and no taper
   const zBack=-.18,zFront=.18;
-  const back=pr(rotQ([0,0,zBack]),w,h,e), front=pr(rotQ([0,0,zFront]),w,h,e);
+  const back=pr(rot([0,0,zBack]),w,h,e), front=pr(rot([0,0,zFront]),w,h,e);
   const stemW=.29*S;
   const edgeW=stemW*.08;
 
@@ -211,7 +178,7 @@ function ques(g,w,h,e){
   // while each visible local face reads as a solid holo color rather than transparent plastic.
   const slices=28;
   for(let k=0;k<slices;k++){
-    let t=k/(slices-1),z=zBack+(zFront-zBack)*t,q=pr(rotQ([0,0,z]),w,h,e);
+    let t=k/(slices-1),z=zBack+(zFront-zBack)*t,q=pr(rot([0,0,z]),w,h,e);
     g.save();g.translate(q[0],q[1]);g.scale(S,-S);g.transform(1,0,-.10,1,0,0);
     let ug=g.createLinearGradient(-.58,.10,.78,.10);
     let phase=fr(hue+.12+(ax/MAX)*.10);
@@ -252,8 +219,8 @@ function ques(g,w,h,e){
   let backRing=[], frontRing=[];
   for(let i=0;i<seg;i++){
     let a=i*T/seg;
-    backRing.push(pr(rotQ(ringPoint(a,-dz)),w,h,e));
-    frontRing.push(pr(rotQ(ringPoint(a, dz)),w,h,e));
+    backRing.push(pr(rot(ringPoint(a,-dz)),w,h,e));
+    frontRing.push(pr(rot(ringPoint(a, dz)),w,h,e));
   }
 
   // Rear face first. It is opaque and later hidden by the cylindrical side/front
@@ -273,11 +240,11 @@ function ques(g,w,h,e){
     let j=(i+1)%seg, a0=i*T/seg, a1=j*T/seg;
     let p0b=ringPoint(a0,-dz), p1b=ringPoint(a1,-dz);
     let p1f=ringPoint(a1, dz), p0f=ringPoint(a0, dz);
-    let r0=rotQ(p0b), r1=rotQ(p1b), r2=rotQ(p1f), r3=rotQ(p0f);
+    let r0=rot(p0b), r1=rot(p1b), r2=rot(p1f), r3=rot(p0f);
     let am=(a0+a1)*.5;
     if(i===seg-1) am=(a0+T)*.5;
     // radial cylinder normal, rotated with the object
-    let n=rotQ([Math.cos(am),Math.sin(am),0]);
+    let n=rot([Math.cos(am),Math.sin(am),0]);
     sideFaces.push({
       z:(r0[2]+r1[2]+r2[2]+r3[2])*.25,
       n,

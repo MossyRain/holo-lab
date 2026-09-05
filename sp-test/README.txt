@@ -1,9 +1,11 @@
-HOLO ORB 3D TEST 22
-- TEST21を基準に変更
-- ? 本体・球殻・オーロラ・ハイライト・インクルージョンはTEST21を維持
-- 下の点を「前面円 + 裏面円 + 32分割の円筒側面」に再構成
-- 点の側面は円周方向の実法線に基づいてホロ色を変化
-- 点の前後面は傾き時に正しい透視投影で楕円化
-- 点はテーパーなし・面取りなしのストレート押し出し
-- 点の直径 = 縦棒幅の1.2倍、押し出し厚み = 点の直径
-- V22を各ホロ画像内に焼き込み
+HOLO LAB ? ORB / TEST 23
+
+Based directly on TEST 22.
+Changes:
+- Aurora shell opacity now follows sphere curvature: transparent at face-on center, stronger toward grazing outer surface.
+- Removed independent gray/milky base wash; aurora itself forms the visible shell.
+- Highlights are true sphere-surface latitude/longitude patches with crisp boundaries and viewpoint-driven motion.
+- Hook body and dot now share the same 3D rotation, including a small neutral base angle, so both expose extrusion consistently.
+- TEST 22 inclusion behavior retained.
+- Left/right hue phase retained.
+- V23 burned into both rendered holo panels.
