@@ -1,5 +1,5 @@
 (()=>{
-const VERSION="21";
+const VERSION="22";
 const C=[L,R], MAX=Math.PI/6, T=Math.PI*2;
 let tx=0,ty=0,ax=0,ay=0,rg=0,rb=0,bg=0,bb=0,have=0,drag=0,lx=0,ly=0;
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v)), fr=v=>v-Math.floor(v);
@@ -196,29 +196,84 @@ function ques(g,w,h,e){
   g.lineJoin="round";g.lineCap="round";g.lineWidth=edgeW/S;
   g.strokeStyle=hsv(hue+.18,.95,.66);g.stroke();g.restore();
 
-  // Dot: diameter 1.2x stem width, depth equals its diameter in the same object scale.
-  const dotD=stemW*1.2,rr=dotD*.5;
-  const y0=-.68;
-  // make extrusion depth of dot visually/structurally equal to its diameter
-  const dz=(dotD/S)*.5;
-  const db=pr(rot([0,y0,-dz]),w,h,e),df=pr(rot([0,y0,dz]),w,h,e);
-  let vx=df[0]-db[0],vy=df[1]-db[1],vl=Math.hypot(vx,vy)||1;
-  let px=-vy/vl*rr,py=vx/vl*rr;
+  // Dot: true straight cylinder.
+  // Diameter = 1.2x stem width; extrusion depth = diameter.
+  // Front/back are circular planar faces. The side is a cylindrical surface
+  // approximated by 32 circumferential quads, each with its own surface normal.
+  const dotD=stemW*1.2, rrObj=(dotD/S)*.5;
+  const y0=-.68, x0=0;
+  const dz=rrObj; // total depth 2*dz = dot diameter
+  const seg=32;
 
-  // rear circular B-rep edge first
-  g.beginPath();g.arc(db[0],db[1],rr,0,T);g.lineWidth=edgeW;
-  g.strokeStyle=hsv(hue+.43,.92,.72);g.stroke();
+  function ringPoint(a,z){
+    return [x0+rrObj*Math.cos(a), y0+rrObj*Math.sin(a), z];
+  }
+  function polyPath(pts){
+    g.beginPath();
+    g.moveTo(pts[0][0],pts[0][1]);
+    for(let i=1;i<pts.length;i++) g.lineTo(pts[i][0],pts[i][1]);
+    g.closePath();
+  }
 
-  // opaque cylindrical side
-  g.beginPath();g.moveTo(db[0]+px,db[1]+py);g.lineTo(df[0]+px,df[1]+py);
-  g.lineTo(df[0]-px,df[1]-py);g.lineTo(db[0]-px,db[1]-py);g.closePath();
-  let dg=g.createLinearGradient(db[0]-rr,db[1],db[0]+rr,db[1]);
-  dg.addColorStop(0,hsv(hue+.12,.92,.80));dg.addColorStop(.5,hsv(hue+.43,.92,.78));dg.addColorStop(1,hsv(hue+.72,.92,.80));
-  g.fillStyle=dg;g.fill();
+  // Projected back/front rings: true perspective turns them into ellipses when tilted.
+  let backRing=[], frontRing=[];
+  for(let i=0;i<seg;i++){
+    let a=i*T/seg;
+    backRing.push(pr(rot(ringPoint(a,-dz)),w,h,e));
+    frontRing.push(pr(rot(ringPoint(a, dz)),w,h,e));
+  }
 
-  // front face uniform + explicit boundary
-  g.beginPath();g.arc(df[0],df[1],rr,0,T);g.fillStyle=hsv(hue,.90,.96);g.fill();
-  g.lineWidth=edgeW;g.strokeStyle=hsv(hue+.18,.95,.66);g.stroke();
+  // Rear face first. It is opaque and later hidden by the cylindrical side/front
+  // where geometry overlaps.
+  polyPath(backRing);
+  g.fillStyle=hsv(hue+.43,.88,.58);
+  g.fill();
+  g.lineJoin="round"; g.lineWidth=edgeW;
+  g.strokeStyle=hsv(hue+.43,.92,.72);
+  g.stroke();
+
+  // Build the actual cylindrical side as circumferential surface strips.
+  // Painter-sort by rotated depth. Color is based on the local radial normal,
+  // so hue travels around the curved side rather than across a flat rectangle.
+  let sideFaces=[];
+  for(let i=0;i<seg;i++){
+    let j=(i+1)%seg, a0=i*T/seg, a1=j*T/seg;
+    let p0b=ringPoint(a0,-dz), p1b=ringPoint(a1,-dz);
+    let p1f=ringPoint(a1, dz), p0f=ringPoint(a0, dz);
+    let r0=rot(p0b), r1=rot(p1b), r2=rot(p1f), r3=rot(p0f);
+    let am=(a0+a1)*.5;
+    if(i===seg-1) am=(a0+T)*.5;
+    // radial cylinder normal, rotated with the object
+    let n=rot([Math.cos(am),Math.sin(am),0]);
+    sideFaces.push({
+      z:(r0[2]+r1[2]+r2[2]+r3[2])*.25,
+      n,
+      pts:[pr(r0,w,h,e),pr(r1,w,h,e),pr(r2,w,h,e),pr(r3,w,h,e)]
+    });
+  }
+  sideFaces.sort((a,b)=>a.z-b.z);
+  for(let f of sideFaces){
+    // U/circumferential holo phase from the true curved-surface normal.
+    let nh=Math.atan2(f.n[1],f.n[0])/T;
+    let sideHue=fr(hue+.18+nh*.92+(ax/MAX)*.10+e*.018);
+    polyPath(f.pts);
+    g.fillStyle=hsv(sideHue,.92,.80);
+    g.fill();
+  }
+
+  // Front face: one uniform opaque holo color, matching the main ? rule.
+  polyPath(frontRing);
+  g.fillStyle=hsv(hue,.90,.96);
+  g.fill();
+
+  // Explicit front B-rep boundary.
+  g.lineJoin="round"; g.lineWidth=edgeW;
+  g.strokeStyle=hsv(hue+.18,.95,.66);
+  g.stroke();
+
+  // Reassert the rear B-rep boundary only where it remains visible.
+  // Because it was drawn before the side/front, hidden portions stay occluded.
+
 }
 
 function setup(c,e){
