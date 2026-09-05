@@ -1,5 +1,5 @@
 (()=>{
-const VERSION="19";
+const VERSION="20";
 const C=[L,R], MAX=Math.PI/6, T=Math.PI*2;
 let tx=0,ty=0,ax=0,ay=0,rg=0,rb=0,bg=0,bb=0,have=0,drag=0,lx=0,ly=0;
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v)), fr=v=>v-Math.floor(v);
@@ -16,20 +16,24 @@ function pr(p,w,h,e){let z=p[2]+3.5,f=Math.min(w,h)*1.28;return[w/2+(p[0]+e*.035
    wide hook, short lower stem, thick graphic construction.
    no bevel, no taper. */
 function qp(g){
+  /* TEST20: Toppan-Bunkyu-Midashi-Gothic-EB-like proportions, not a font glyph.
+     Broad horizontal hook, heavy stroke, short terminal stem. */
   g.beginPath();
-  g.moveTo(-.48,.48);
-  g.bezierCurveTo(-.50,.77,-.23,.95,.10,.92);
-  g.bezierCurveTo(.44,.89,.66,.70,.64,.43);
-  g.bezierCurveTo(.62,.22,.49,.10,.30,-.02);
-  g.bezierCurveTo(.11,-.14,.02,-.23,.02,-.38);
-  g.lineTo(-.23,-.38);
-  g.bezierCurveTo(-.23,-.08,-.08,.08,.12,.20);
-  g.bezierCurveTo(.25,.28,.32,.36,.30,.45);
-  g.bezierCurveTo(.28,.57,.15,.63,.00,.63);
-  g.bezierCurveTo(-.15,.63,-.25,.56,-.25,.44);
-  g.bezierCurveTo(-.25,.34,-.20,.25,-.10,.19);
-  g.lineTo(-.28,.04);
-  g.bezierCurveTo(-.42,.13,-.49,.28,-.48,.48);
+  // outer silhouette, clockwise from lower-left of hook
+  g.moveTo(-.52,.34);
+  g.bezierCurveTo(-.52,.73,-.22,.94,.17,.94);
+  g.bezierCurveTo(.56,.94,.79,.72,.79,.43);
+  g.bezierCurveTo(.79,.18,.64,.02,.42,-.11);
+  g.bezierCurveTo(.25,-.21,.17,-.28,.17,-.40);
+  g.lineTo(-.12,-.40);
+  g.bezierCurveTo(-.12,-.13,.03,.03,.24,.16);
+  g.bezierCurveTo(.38,.25,.45,.33,.45,.43);
+  g.bezierCurveTo(.45,.57,.33,.65,.15,.65);
+  g.bezierCurveTo(-.04,.65,-.17,.56,-.17,.40);
+  g.bezierCurveTo(-.17,.29,-.12,.20,-.01,.13);
+  // inner return makes the hook thick and graphic rather than tubular
+  g.lineTo(-.25,-.02);
+  g.bezierCurveTo(-.43,.08,-.52,.20,-.52,.34);
   g.closePath();
 }
 
@@ -49,71 +53,71 @@ for(let i=0;i<250;i++){
    highlights have crisp boundaries and move with viewpoint. */
 function shell(g,w,h,e){
   let cx=w*.5,cy=h*.5,R=Math.min(w,h)*.44;
-  let eyePhase=e*.022; // slight LR optical phase difference
+  let eyePhase=e*.026;
 
   g.save();
   g.beginPath();g.arc(cx,cy,R,0,T);g.clip();
 
-  // faint dark body
-  let base=g.createRadialGradient(cx,cy,R*.05,cx,cy,R);
-  base.addColorStop(0,"rgba(0,0,0,0)");
-  base.addColorStop(.60,"rgba(10,12,18,.02)");
-  base.addColorStop(.83,"rgba(95,105,125,.08)");
-  base.addColorStop(1,"rgba(160,170,195,.18)");
+  // Transparent core + softly milky shell body. Avoid a white/gray glass-ball read.
+  let base=g.createRadialGradient(cx,cy,R*.08,cx,cy,R);
+  base.addColorStop(0,"rgba(5,7,12,.00)");
+  base.addColorStop(.52,"rgba(12,15,23,.015)");
+  base.addColorStop(.76,"rgba(90,105,125,.045)");
+  base.addColorStop(1,"rgba(150,165,188,.10)");
   g.fillStyle=base;g.fillRect(cx-R,cy-R,R*2,R*2);
 
-  // aurora-sheet patches: intentionally large and gentle
+  // Broad 2D aurora-sheet fields. Large, low-contrast patches rather than a rainbow rim.
   const blobs=[
-    [-.62,-.52,.46,.24],[.03,-.70,.92,.22],[.62,-.33,.55,.20],
-    [-.63,.40,.60,.19],[.02,.68,.15,.25],[.64,.50,.80,.21]
+    [-.60,-.52,.42,.22,1.05],[.02,-.72,.94,.19,1.15],[.66,-.35,.55,.18,.95],
+    [-.68,.42,.62,.18,1.02],[-.04,.70,.12,.22,1.18],[.65,.54,.82,.17,1.00]
   ];
   for(let i=0;i<blobs.length;i++){
-    let [bx,by,ph,op]=blobs[i];
-    let shiftX=Math.sin(ax*2.1+i*.8+eyePhase*8)*R*.08;
-    let shiftY=Math.cos(ay*2.0+i*.7-eyePhase*6)*R*.07;
-    let x=cx+bx*R+shiftX,y=cy+by*R+shiftY;
-    let rr=R*(.78+(i%2)*.09);
+    let [bx,by,ph,op,sz]=blobs[i];
+    let x=cx+bx*R+Math.sin(ax*1.7+i*.91+eyePhase*7)*R*.10;
+    let y=cy+by*R+Math.cos(ay*1.6+i*.73-eyePhase*5)*R*.09;
+    let rr=R*sz;
     let gr=g.createRadialGradient(x,y,0,x,y,rr);
-    let hp=ph + ax*.23 + ay*.10 + eyePhase;
-    gr.addColorStop(0,hsv(hp,.52,.95,op));
-    gr.addColorStop(.48,hsv(hp+.08,.40,.95,op*.52));
+    let hp=ph+ax*.16+ay*.09+eyePhase;
+    gr.addColorStop(0,hsv(hp,.34,.98,op));
+    gr.addColorStop(.38,hsv(hp+.055,.28,.98,op*.70));
+    gr.addColorStop(.72,hsv(hp+.11,.22,.97,op*.30));
     gr.addColorStop(1,"rgba(0,0,0,0)");
     g.fillStyle=gr;g.fillRect(cx-R,cy-R,R*2,R*2);
   }
-  g.restore();
 
-  // colored rim, not white
-  g.save();
-  g.beginPath();g.arc(cx,cy,R,0,T);
-  g.lineWidth=R*.050;
-  let rim=g.createLinearGradient(cx-R,cy-R,cx+R,cy+R);
-  let rp=ax*.20+ay*.08+eyePhase;
-  rim.addColorStop(0,hsv(.46+rp,.55,.94,.70));
-  rim.addColorStop(.30,hsv(.88+rp,.46,.95,.56));
-  rim.addColorStop(.63,hsv(.58+rp,.48,.95,.52));
-  rim.addColorStop(1,hsv(.12+rp,.54,.95,.70));
-  g.strokeStyle=rim;g.stroke();
-  g.restore();
+  // A faint complementary wash across the sphere keeps the aurora from reading only as an outline.
+  let wash=g.createLinearGradient(cx-R*.9,cy-R*.8,cx+R*.85,cy+R*.75);
+  let wp=ax*.12-ay*.08+eyePhase;
+  wash.addColorStop(0,hsv(.46+wp,.26,.98,.055));
+  wash.addColorStop(.36,hsv(.92+wp,.22,.98,.045));
+  wash.addColorStop(.70,hsv(.63+wp,.24,.98,.045));
+  wash.addColorStop(1,hsv(.13+wp,.24,.98,.050));
+  g.fillStyle=wash;g.fillRect(cx-R,cy-R,R*2,R*2);
 
-  // crisp window-like highlight, viewpoint-driven
-  let hx=cx-R*.50 + (ax/MAX)*R*.22 + e*R*.012;
-  let hy=cy-R*.56 + (ay/MAX)*R*.18;
-  g.save();
-  g.translate(hx,hy);
-  g.rotate(-.20 + ax*.34);
-  g.fillStyle="rgba(255,255,255,.72)";
+  // Crisp, bounded reflections. They are clipped to the sphere and move with viewpoint.
+  let hx=cx-R*.50+(ax/MAX)*R*.24+e*R*.012;
+  let hy=cy-R*.56+(ay/MAX)*R*.18;
+  g.save();g.translate(hx,hy);g.rotate(-.20+ax*.34);
+  g.fillStyle="rgba(255,255,255,.78)";
   g.fillRect(-R*.15,-R*.045,R*.29,R*.075);
   g.fillRect(-R*.13,R*.045,R*.19,R*.035);
   g.restore();
 
-  // compact sharp secondary highlight
-  let sx=cx+R*.58-(ax/MAX)*R*.16, sy=cy-R*.50-(ay/MAX)*R*.12;
-  g.save();
-  g.translate(sx,sy);
-  g.rotate(.20-ay*.4);
-  g.fillStyle="rgba(255,255,255,.78)";
-  g.fillRect(-R*.042,-R*.022,R*.084,R*.044);
+  let sx=cx+R*.58-(ax/MAX)*R*.17, sy=cy-R*.50-(ay/MAX)*R*.13;
+  g.save();g.translate(sx,sy);g.rotate(.20-ay*.4);
+  g.fillStyle="rgba(255,255,255,.82)";
+  g.fillRect(-R*.045,-R*.024,R*.090,R*.048);
   g.restore();
+  g.restore();
+
+  // Thin colored optical edge only; aurora itself lives on the shell surface above.
+  g.save();g.beginPath();g.arc(cx,cy,R,0,T);g.lineWidth=R*.018;
+  let rim=g.createLinearGradient(cx-R,cy-R,cx+R,cy+R),rp=ax*.18+ay*.07+eyePhase;
+  rim.addColorStop(0,hsv(.46+rp,.48,.96,.52));
+  rim.addColorStop(.34,hsv(.90+rp,.42,.96,.45));
+  rim.addColorStop(.68,hsv(.59+rp,.44,.96,.42));
+  rim.addColorStop(1,hsv(.13+rp,.46,.96,.50));
+  g.strokeStyle=rim;g.stroke();g.restore();
 }
 
 function inc(g,w,h,e){
@@ -146,54 +150,65 @@ function inc(g,w,h,e){
    Extrusion is straight: same 2D shape at front/back, no bulge/bevel/taper.
    Front/back boundaries both carry thick holo edge lines. */
 function ques(g,w,h,e){
-  const hue=fr(.10+(ax/MAX)*.72+(ay/MAX)*.43+e*.022);
-  const S=Math.min(w,h)*.31/1.45;
-  const zBack=-.16,zFront=.16;
+  const hue=fr(.10+(ax/MAX)*.72+(ay/MAX)*.43+e*.030);
+  // TEST20: ~1.2x TEST19 apparent size.
+  const S=Math.min(w,h)*.372/1.45;
+  // straight extrusion; no bevel and no taper
+  const zBack=-.18,zFront=.18;
   const back=pr(rot([0,0,zBack]),w,h,e), front=pr(rot([0,0,zFront]),w,h,e);
-  const stemW=.25*S;
+  const stemW=.29*S;
   const edgeW=stemW*.08;
 
-  // side body: many identical silhouettes, same U-gradient phase through depth
-  const slices=22;
+  // Rear B-rep boundary FIRST, so solid side/front geometry correctly occludes hidden portions.
+  g.save();g.translate(back[0],back[1]);g.scale(S,-S);
+  qp(g);g.lineJoin="round";g.lineCap="round";g.lineWidth=edgeW/S;
+  g.strokeStyle=hsv(hue+.43,.92,.72);g.stroke();g.restore();
+
+  // Straight side extrusion. U-like color variation is carried along the silhouette,
+  // while each visible local face reads as a solid holo color rather than transparent plastic.
+  const slices=28;
   for(let k=0;k<slices;k++){
-    let t=k/(slices-1), z=zBack+(zFront-zBack)*t, q=pr(rot([0,0,z]),w,h,e);
+    let t=k/(slices-1),z=zBack+(zFront-zBack)*t,q=pr(rot([0,0,z]),w,h,e);
     g.save();g.translate(q[0],q[1]);g.scale(S,-S);
-    let ug=g.createConicGradient(-Math.PI*.62+(ax/MAX)*.90-(ay/MAX)*.24,-.02,.40);
-    let phase=fr(hue+.08);
-    for(let j=0;j<=14;j++){let u=j/14;ug.addColorStop(u,hsv(phase+u*.92,.92,.78));}
+    let ug=g.createLinearGradient(-.58,.10,.78,.10);
+    let phase=fr(hue+.12+(ax/MAX)*.10);
+    ug.addColorStop(0,hsv(phase+.00,.91,.82));
+    ug.addColorStop(.28,hsv(phase+.18,.92,.80));
+    ug.addColorStop(.56,hsv(phase+.38,.92,.80));
+    ug.addColorStop(.80,hsv(phase+.60,.92,.80));
+    ug.addColorStop(1,hsv(phase+.82,.91,.82));
     g.fillStyle=ug;qp(g);g.fill();g.restore();
   }
 
-  // rear boundary / B-rep edge
-  g.save();g.translate(back[0],back[1]);g.scale(S,-S);
-  qp(g);g.lineWidth=edgeW/S;g.strokeStyle=hsv(hue+.43,.94,.70);g.stroke();g.restore();
-
-  // front plane is opaque and UNIFORM
+  // Front plane: one uniform opaque holo color at any instant.
   g.save();g.translate(front[0],front[1]);g.scale(S,-S);
   qp(g);g.fillStyle=hsv(hue,.90,.96);g.fill();
-  g.lineWidth=edgeW/S;g.strokeStyle=hsv(hue+.18,.96,.66);g.stroke();g.restore();
+  g.lineJoin="round";g.lineCap="round";g.lineWidth=edgeW/S;
+  g.strokeStyle=hsv(hue+.18,.95,.66);g.stroke();g.restore();
 
-  // dot = straight cylinder; diameter = 1.2 x stem width; depth = same as diameter.
-  const dotD=stemW*1.2, rr=dotD*.5;
-  const y0=-.60;
-  const db=pr(rot([0,y0,zBack]),w,h,e), df=pr(rot([0,y0,zFront]),w,h,e);
-
-  // cylinder side as tangent quad
+  // Dot: diameter 1.2x stem width, depth equals its diameter in the same object scale.
+  const dotD=stemW*1.2,rr=dotD*.5;
+  const y0=-.68;
+  // make extrusion depth of dot visually/structurally equal to its diameter
+  const dz=(dotD/S)*.5;
+  const db=pr(rot([0,y0,-dz]),w,h,e),df=pr(rot([0,y0,dz]),w,h,e);
   let vx=df[0]-db[0],vy=df[1]-db[1],vl=Math.hypot(vx,vy)||1;
   let px=-vy/vl*rr,py=vx/vl*rr;
-  g.beginPath();
-  g.moveTo(db[0]+px,db[1]+py);g.lineTo(df[0]+px,df[1]+py);
+
+  // rear circular B-rep edge first
+  g.beginPath();g.arc(db[0],db[1],rr,0,T);g.lineWidth=edgeW;
+  g.strokeStyle=hsv(hue+.43,.92,.72);g.stroke();
+
+  // opaque cylindrical side
+  g.beginPath();g.moveTo(db[0]+px,db[1]+py);g.lineTo(df[0]+px,df[1]+py);
   g.lineTo(df[0]-px,df[1]-py);g.lineTo(db[0]-px,db[1]-py);g.closePath();
-  g.fillStyle=hsv(hue+.34,.92,.76);g.fill();
+  let dg=g.createLinearGradient(db[0]-rr,db[1],db[0]+rr,db[1]);
+  dg.addColorStop(0,hsv(hue+.12,.92,.80));dg.addColorStop(.5,hsv(hue+.43,.92,.78));dg.addColorStop(1,hsv(hue+.72,.92,.80));
+  g.fillStyle=dg;g.fill();
 
-  // rear edge
-  g.beginPath();g.arc(db[0],db[1],rr,0,T);
-  g.lineWidth=edgeW;g.strokeStyle=hsv(hue+.43,.94,.70);g.stroke();
-
-  // front face uniform + edge
-  g.beginPath();g.arc(df[0],df[1],rr,0,T);
-  g.fillStyle=hsv(hue,.90,.96);g.fill();
-  g.lineWidth=edgeW;g.strokeStyle=hsv(hue+.18,.96,.66);g.stroke();
+  // front face uniform + explicit boundary
+  g.beginPath();g.arc(df[0],df[1],rr,0,T);g.fillStyle=hsv(hue,.90,.96);g.fill();
+  g.lineWidth=edgeW;g.strokeStyle=hsv(hue+.18,.95,.66);g.stroke();
 }
 
 function setup(c,e){
