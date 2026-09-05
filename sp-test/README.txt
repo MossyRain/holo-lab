@@ -1,11 +1,8 @@
-HOLO LAB ? ORB / TEST 23
+HOLO LAB ? ORB / TEST 24
 
-Based directly on TEST 22.
-Changes:
-- Aurora shell opacity now follows sphere curvature: transparent at face-on center, stronger toward grazing outer surface.
-- Removed independent gray/milky base wash; aurora itself forms the visible shell.
-- Highlights are true sphere-surface latitude/longitude patches with crisp boundaries and viewpoint-driven motion.
-- Hook body and dot now share the same 3D rotation, including a small neutral base angle, so both expose extrusion consistently.
-- TEST 22 inclusion behavior retained.
-- Left/right hue phase retained.
-- V23 burned into both rendered holo panels.
+Changes from TEST 23
+- Aurora center transparency/curvature mask retained.
+- Aurora color saturation strongly increased (large-step test, approximately 10x intent; saturation clamps at full chroma).
+- Highlight patches changed to much narrower, vertically elongated window reflections.
+- Question-mark dot rebuilt as part of the same swept planar geometry as the hook: same 2D shear, same extrusion depth, same 3D rotation and projection.
+- V24 burned into both rendered panels.

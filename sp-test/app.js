@@ -1,5 +1,5 @@
 (()=>{
-const VERSION="23";
+const VERSION="24";
 const C=[L,R], MAX=Math.PI/6, T=Math.PI*2;
 let tx=0,ty=0,ax=0,ay=0,rg=0,rb=0,bg=0,bb=0,have=0,drag=0,lx=0,ly=0;
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v)), fr=v=>v-Math.floor(v);
@@ -81,18 +81,18 @@ function shell(g,w,h,e){
     let rr=R*sz;
     let gr=o.createRadialGradient(x,y,0,x,y,rr);
     let hp=ph+ax*.16+ay*.09+eyePhase;
-    gr.addColorStop(0,hsv(hp,.42,.98,op));
-    gr.addColorStop(.38,hsv(hp+.055,.36,.98,op*.78));
-    gr.addColorStop(.72,hsv(hp+.11,.38,.97,op*.44));
+    gr.addColorStop(0,hsv(hp,1.00,.98,op));
+    gr.addColorStop(.38,hsv(hp+.055,1.00,.98,op*.78));
+    gr.addColorStop(.72,hsv(hp+.11,1.00,.97,op*.44));
     gr.addColorStop(1,"rgba(0,0,0,0)");
     o.fillStyle=gr;o.fillRect(cx-R,cy-R,R*2,R*2);
   }
   let wash=o.createLinearGradient(cx-R*.9,cy-R*.8,cx+R*.85,cy+R*.75);
   let wp=ax*.12-ay*.08+eyePhase;
-  wash.addColorStop(0,hsv(.46+wp,.44,.98,.15));
-  wash.addColorStop(.36,hsv(.92+wp,.40,.98,.13));
-  wash.addColorStop(.70,hsv(.63+wp,.42,.98,.13));
-  wash.addColorStop(1,hsv(.13+wp,.42,.98,.15));
+  wash.addColorStop(0,hsv(.46+wp,1.00,.98,.15));
+  wash.addColorStop(.36,hsv(.92+wp,1.00,.98,.13));
+  wash.addColorStop(.70,hsv(.63+wp,1.00,.98,.13));
+  wash.addColorStop(1,hsv(.13+wp,1.00,.98,.15));
   o.fillStyle=wash;o.fillRect(cx-R,cy-R,R*2,R*2);
   o.restore();
 
@@ -150,9 +150,9 @@ function shell(g,w,h,e){
     // slightly tinted area-light reflection, crisp boundary, not paper-white
     g.fillStyle=hsv(.50+ax*.06-ay*.04+eyePhase,.10,1,alpha);g.fill();g.restore();
   }
-  highlightPatch(-.56,.22,.17,.075,.62);
-  highlightPatch(-.50,.08,.105,.040,.43);
-  highlightPatch(.48,.30,.065,.035,.50);
+  highlightPatch(-.56,.20,.045,.225,.60);
+  highlightPatch(-.47,.10,.026,.125,.34);
+  highlightPatch(.48,.30,.024,.105,.42);
 
   // Thin optical boundary only.
   g.save();g.beginPath();g.arc(cx,cy,R,0,T);g.lineWidth=R*.014;
@@ -229,83 +229,53 @@ function ques(g,w,h,e){
   g.lineJoin="round";g.lineCap="round";g.lineWidth=edgeW/S;
   g.strokeStyle=hsv(hue+.18,.95,.66);g.stroke();g.restore();
 
-  // Dot: true straight cylinder.
-  // Diameter = 1.2x stem width; extrusion depth = diameter.
-  // Front/back are circular planar faces. The side is a cylindrical surface
-  // approximated by 32 circumferential quads, each with its own surface normal.
+  // Dot: part of the SAME swept planar ? as the hook.
+  // Same 2D shear, same zBack/zFront, same rotQ() and same perspective projection.
+  // It therefore moves/foreshortens by exactly the same rigid-body rule as the hook.
   const dotD=stemW*1.2, rrObj=(dotD/S)*.5;
-  const y0=-.68, x0=0;
-  const dz=rrObj; // total depth 2*dz = dot diameter
-  const seg=32;
-
-  function ringPoint(a,z){
-    return [x0+rrObj*Math.cos(a), y0+rrObj*Math.sin(a), z];
+  const y0=-.68, x0=0, seg=32;
+  const shear=-.10;
+  function dotPoint(a,z){
+    const yy=y0+rrObj*Math.sin(a);
+    const xx=x0+rrObj*Math.cos(a)+shear*yy;
+    return [xx,yy,z];
   }
   function polyPath(pts){
-    g.beginPath();
-    g.moveTo(pts[0][0],pts[0][1]);
+    g.beginPath(); g.moveTo(pts[0][0],pts[0][1]);
     for(let i=1;i<pts.length;i++) g.lineTo(pts[i][0],pts[i][1]);
     g.closePath();
   }
-
-  // Projected back/front rings: true perspective turns them into ellipses when tilted.
-  let backRing=[], frontRing=[];
+  let backRing=[],frontRing=[];
   for(let i=0;i<seg;i++){
-    let a=i*T/seg;
-    backRing.push(pr(rotQ(ringPoint(a,-dz)),w,h,e));
-    frontRing.push(pr(rotQ(ringPoint(a, dz)),w,h,e));
+    const a=i*T/seg;
+    backRing.push(pr(rotQ(dotPoint(a,zBack)),w,h,e));
+    frontRing.push(pr(rotQ(dotPoint(a,zFront)),w,h,e));
   }
-
-  // Rear face first. It is opaque and later hidden by the cylindrical side/front
-  // where geometry overlaps.
   polyPath(backRing);
-  g.fillStyle=hsv(hue+.43,.88,.58);
-  g.fill();
+  g.fillStyle=hsv(hue+.43,.88,.58); g.fill();
   g.lineJoin="round"; g.lineWidth=edgeW;
-  g.strokeStyle=hsv(hue+.43,.92,.72);
-  g.stroke();
+  g.strokeStyle=hsv(hue+.43,.92,.72); g.stroke();
 
-  // Build the actual cylindrical side as circumferential surface strips.
-  // Painter-sort by rotated depth. Color is based on the local radial normal,
-  // so hue travels around the curved side rather than across a flat rectangle.
   let sideFaces=[];
   for(let i=0;i<seg;i++){
-    let j=(i+1)%seg, a0=i*T/seg, a1=j*T/seg;
-    let p0b=ringPoint(a0,-dz), p1b=ringPoint(a1,-dz);
-    let p1f=ringPoint(a1, dz), p0f=ringPoint(a0, dz);
-    let r0=rotQ(p0b), r1=rotQ(p1b), r2=rotQ(p1f), r3=rotQ(p0f);
-    let am=(a0+a1)*.5;
-    if(i===seg-1) am=(a0+T)*.5;
-    // radial cylinder normal, rotated with the object
-    let n=rotQ([Math.cos(am),Math.sin(am),0]);
-    sideFaces.push({
-      z:(r0[2]+r1[2]+r2[2]+r3[2])*.25,
-      n,
-      pts:[pr(r0,w,h,e),pr(r1,w,h,e),pr(r2,w,h,e),pr(r3,w,h,e)]
-    });
+    const j=(i+1)%seg,a0=i*T/seg,a1=j*T/seg;
+    const r0=rotQ(dotPoint(a0,zBack)),r1=rotQ(dotPoint(a1,zBack));
+    const r2=rotQ(dotPoint(a1,zFront)),r3=rotQ(dotPoint(a0,zFront));
+    sideFaces.push({z:(r0[2]+r1[2]+r2[2]+r3[2])*.25,
+      pts:[pr(r0,w,h,e),pr(r1,w,h,e),pr(r2,w,h,e),pr(r3,w,h,e)],
+      a:(a0+a1)*.5});
   }
   sideFaces.sort((a,b)=>a.z-b.z);
-  for(let f of sideFaces){
-    // U/circumferential holo phase from the true curved-surface normal.
-    let nh=Math.atan2(f.n[1],f.n[0])/T;
-    let sideHue=fr(hue+.18+nh*.92+(ax/MAX)*.10+e*.018);
+  for(const f of sideFaces){
     polyPath(f.pts);
-    g.fillStyle=hsv(sideHue,.92,.80);
+    g.fillStyle=hsv(fr(hue+.18+f.a/T*.92+(ax/MAX)*.10+e*.018),.92,.80);
     g.fill();
   }
-
-  // Front face: one uniform opaque holo color, matching the main ? rule.
   polyPath(frontRing);
-  g.fillStyle=hsv(hue,.90,.96);
-  g.fill();
-
-  // Explicit front B-rep boundary.
+  g.fillStyle=hsv(hue,.90,.96); g.fill();
   g.lineJoin="round"; g.lineWidth=edgeW;
-  g.strokeStyle=hsv(hue+.18,.95,.66);
-  g.stroke();
+  g.strokeStyle=hsv(hue+.18,.95,.66); g.stroke();
 
-  // Reassert the rear B-rep boundary only where it remains visible.
-  // Because it was drawn before the side/front, hidden portions stay occluded.
 
 }
 
