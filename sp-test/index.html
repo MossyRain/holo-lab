@@ -1,23 +1,11 @@
-<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#000000">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<title>HOLO LAB ? ORB / TEST 18</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div id="stage">
-  <div class="side title"><b>HOLO LAB</b><span>? ORB / TEST 18</span></div>
-  <div class="controls"><button id="tilt">TILT ACT</button><button id="reset">RESET</button></div>
-  <div id="pair">
-    <div class="card"><canvas id="right"></canvas><span>RIGHT</span></div>
-    <div class="card"><canvas id="left"></canvas><span>LEFT</span></div>
-  </div>
-  <div class="side spec">TEST 18 / ±30° / opaque holo ? / aurora shell</div>
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<link rel=stylesheet href="style.css?v=19">
+<div id=app>
+<header><b>HOLO LAB</b><span>? ORB / TEST 19</span><div><button id=reset>RESET</button><button id=motion>TILT ON</button></div></header>
+<main>
+<section><canvas id=L></canvas><small>LEFT</small></section>
+<section><canvas id=R></canvas><small>RIGHT</small></section>
+</main>
+<footer>TEST 19 / ±30° / opaque flat-face holo / aurora shell / LR hue phase</footer>
 </div>
-<script src="app.js"></script>
-</body></html>
+<script src="app.js?v=19"></script>

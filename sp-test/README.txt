@@ -1,15 +1,15 @@
-HOLO LAB — ? ORB TEST 17
+HOLO LAB — ? ORB TEST 19
+Base: TEST 17 stable structure.
 
-Base: TEST 16.
-
-- ? silhouette redesigned as a sculpted object rather than a font-like extrusion.
-- Fuller crown, deeper inner scoop, tapered lower tail, asymmetrical molded mass.
-- Side rainbow remains U-direction driven.
-- Body cross-section is visually rounded by bulging middle depth slices.
-- Front cap is coherent in hue but more glassy/translucent.
-- Dot changed from cylinder-like appearance to a slightly flattened orb.
-- Inclusion size hierarchy: small majority / medium minority / few large inclusions.
-- Rare large inclusions produce stronger angle-triggered sparkles.
-- Inclusions remain fully clipped inside the orb.
-- No time-based blinking.
-- Added restrained localized shell edge sheen without adding central haze.
+Key changes:
+- UI / JS / rendered holo all identify version 19.
+- app.js and style.css are cache-busted with ?v=19.
+- Each LEFT/RIGHT canvas burns in V19 at the bottom-right.
+- LEFT/RIGHT holographic color phases differ slightly to mimic real holo angle difference.
+- ? front face is opaque and a single uniform color at any static angle.
+- Straight extrusion only: no bevel, bulge, taper, or rounded cross-section.
+- Thick holographic B-rep-like edge lines on front and rear boundaries.
+- Dot is a straight cylinder; diameter = 1.2 × stem width; extrusion depth uses the same front/back Z as the main body.
+- TEST17 inclusion population is retained; only slight LR hue phase is added.
+- Shell replaces white milkiness with broad, low-contrast aurora-sheet color patches.
+- Crisp window-like highlights move with viewpoint.
