@@ -1,5 +1,5 @@
 (()=>{
-const VERSION="27b";
+const VERSION="28";
 const C=[L,R], MAX=Math.PI/6, T=Math.PI*2;
 let tx=0,ty=0,ax=0,ay=0,rg=0,rb=0,bg=0,bb=0,have=0,drag=0,lx=0,ly=0;
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v)), fr=v=>v-Math.floor(v);
@@ -122,43 +122,60 @@ function shell(g,w,h,e){
   o.globalCompositeOperation="source-over";
   g.drawImage(off,0,0);
 
-  // Sphere-surface highlight patch. Defined by latitude/longitude-like coordinates
-  // around a local pole; projection alone bends and foreshortens the rectangular source.
-  function sphPoint(lon,lat,poleLon,poleLat){
-    // local patch around +Z, then rotate its pole on the sphere
-    let x=Math.sin(lon)*Math.cos(lat), y=Math.sin(lat), z=Math.cos(lon)*Math.cos(lat);
-    // pitch around X
-    let cp=Math.cos(poleLat),sp=Math.sin(poleLat);
-    let y1=cp*y-sp*z,z1=sp*y+cp*z;
-    // yaw around Y
-    let cyy=Math.cos(poleLon),syy=Math.sin(poleLon);
-    return [cyy*x+syy*z1,y1,-syy*x+cyy*z1];
-  }
+  // Sphere-surface area-light reflections.
+  // V28: each highlight is a rounded rectangle defined on a tangent plane,
+  // then wrapped onto the sphere. Perspective/curvature therefore changes
+  // BOTH its apparent width and length as it approaches the limb.
+  function norm3(p){let m=Math.hypot(p[0],p[1],p[2])||1;return[p[0]/m,p[1]/m,p[2]/m]}
+  function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+  function poleVec(lon,lat){return[Math.sin(lon)*Math.cos(lat),Math.sin(lat),Math.cos(lon)*Math.cos(lat)]}
   function projSphere(p){return[cx+p[0]*R,cy-p[1]*R,p[2]]}
-  function highlightPatch(pLon,pLat,lonHalf,latHalf,alpha){
-    // viewpoint moves the reflection pole across the sphere
+  function roundedRectBoundary(hw,hh,cr,n=7){
+    // Clockwise, starting near upper-right. Rounded corners avoid paper-strip corners.
+    const out=[], corners=[[hw-cr,hh-cr,0],[hw-cr,-hh+cr,-Math.PI/2],[-hw+cr,-hh+cr,-Math.PI],[-hw+cr,hh-cr,-Math.PI*1.5]];
+    for(const [x,y,a0] of corners) for(let i=0;i<=n;i++){
+      let a=a0+Math.PI/2*i/n; out.push([x+cr*Math.cos(a),y+cr*Math.sin(a)]);
+    }
+    return out;
+  }
+  function highlightPatch(pLon,pLat,halfW,halfH,corner,alpha){
+    // Reflection pole slides over the shell with view angle.
     pLon += ax*.72 + e*.018;
     pLat += ay*.62;
-    const N=12, pts=[];
-    // boundary: top, right, bottom, left in local lon/lat coordinates
-    for(let i=0;i<=N;i++) pts.push(sphPoint(-lonHalf+2*lonHalf*i/N, latHalf,pLon,pLat));
-    for(let i=1;i<=N;i++) pts.push(sphPoint(lonHalf,latHalf-2*latHalf*i/N,pLon,pLat));
-    for(let i=1;i<=N;i++) pts.push(sphPoint(lonHalf-2*lonHalf*i/N,-latHalf,pLon,pLat));
-    for(let i=1;i<N;i++) pts.push(sphPoint(-lonHalf,-latHalf+2*latHalf*i/N,pLon,pLat));
-    // hide patches that have moved entirely behind the visible hemisphere
-    if(!pts.some(p=>p[2]>0)) return;
-    g.save();g.beginPath();
-    let first=true;
-    for(let p of pts){if(p[2]<=0) continue;let q=projSphere(p);if(first){g.moveTo(q[0],q[1]);first=false}else g.lineTo(q[0],q[1])}
-    if(first){g.restore();return}g.closePath();
-    // slightly tinted area-light reflection, crisp boundary, not paper-white
-    g.fillStyle=hsv(.50+ax*.06-ay*.04+eyePhase,.10,1,alpha);g.fill();g.restore();
+    const N=poleVec(pLon,pLat);
+    let U=norm3(cross([0,1,0],N));
+    if(Math.hypot(...U)<.01) U=[1,0,0];
+    const V=norm3(cross(N,U));
+    const boundary=roundedRectBoundary(halfW,halfH,corner,8);
+    const pts=[];
+    // Map the planar area light to the sphere by radial normalization.
+    // This is not a screen-space strip: at grazing angles the projected width collapses.
+    for(const [u,v] of boundary){
+      let p=norm3([N[0]+U[0]*u+V[0]*v,N[1]+U[1]*u+V[1]*v,N[2]+U[2]*u+V[2]*v]);
+      pts.push(p);
+    }
+    if(!pts.some(p=>p[2]>.015)) return;
+    g.save();g.beginPath();let first=true;
+    for(const p of pts){
+      if(p[2]<=.005) continue;
+      const q=projSphere(p);
+      if(first){g.moveTo(q[0],q[1]);first=false}else g.lineTo(q[0],q[1]);
+    }
+    if(first){g.restore();return}
+    g.closePath();
+    // Broad soft-edged area-light value: bright center, slightly dimmer edge,
+    // while retaining a clearly bounded reflected shape.
+    const pc=projSphere(N);
+    let gr=g.createRadialGradient(pc[0],pc[1],0,pc[0],pc[1],R*.34);
+    gr.addColorStop(0,hsv(.50+ax*.06-ay*.04+eyePhase,.055,1,alpha));
+    gr.addColorStop(.70,hsv(.50+ax*.06-ay*.04+eyePhase,.075,.98,alpha*.88));
+    gr.addColorStop(1,hsv(.50+ax*.06-ay*.04+eyePhase,.10,.95,alpha*.70));
+    g.fillStyle=gr;g.fill();g.restore();
   }
-  // V27b: two long area-light reflections on the spherical shell.
-  // Upright-? reference: near/front = upper-left; far/rear = lower-right.
-  // Kept close to the limb and strongly elongated along the local latitude/longitude grid.
-  highlightPatch(-.82,.34,.050,.360,.58);
-  highlightPatch( .82,-.34,.044,.330,.38);
+  // Upright-? reference: front reflection = upper-left, rear reflection = lower-right.
+  // Initial positions are deliberately near the limb. Long axis follows the local sphere grid.
+  highlightPatch(-1.00,.48,.070,.48,.050,.60);
+  highlightPatch( 1.00,-.48,.062,.44,.046,.40);
 
   // Thin optical boundary only.
   g.save();g.beginPath();g.arc(cx,cy,R,0,T);g.lineWidth=R*.014;

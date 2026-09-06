@@ -1,31 +1,13 @@
-HOLO LAB ? ORB / TEST 27b
+HOLO ORB 3D TEST 28
 
-SOURCE
-- Built directly from the user-provided HOLO_ORB_3D_TEST_24 ZIP.
-- TEST 25 / 26 / previous reconstructed 27 code is not used.
+Base: TEST 27b.
 
-UNCHANGED FROM ACTUAL TEST 24
-- Question-mark outline and extrusion geometry
-- Question-mark dot geometry / same zBack-zFront sweep rule as hook
-- Inclusion population and rendering
-- Left/right stereo and hue phase
-- UI/layout and tilt behavior
-- Aurora color-field construction and rim treatment
-
-V27b CHANGES
-1. Aurora opacity only
-   - The V24 aurora colors are retained.
-   - Opacity now falls to transparent toward the visual center according to sphere curvature.
-   - No separate milky-white layer was added.
-
-2. Highlights only
-   - Reduced from three patches to two.
-   - Spherical-coordinate patches are retained.
-   - With the ? upright:
-       near/front highlight = upper-left
-       far/rear highlight   = lower-right
-   - Both start nearer the sphere edge and are substantially more elongated.
-
-3. Version identification
-   - TEST 27b in UI.
-   - V27b burned into each rendered holo panel.
+Changes only:
+- Aurora: unchanged from 27b.
+- Inclusions: unchanged.
+- Highlight geometry rebuilt as rounded rectangular area-light patches mapped to the sphere.
+- Highlight apparent width/length now foreshorten with sphere curvature/view angle.
+- Initial front highlight is farther toward upper-left limb; rear highlight toward lower-right limb (upright ? reference).
+- Highlight corners are slightly rounded.
+- Hook and dot retain the same rigid-body zBack/zFront straight extrusion rule.
+- Version mark updated to V28 inside both rendered holo canvases.
