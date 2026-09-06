@@ -1,27 +1,11 @@
 <!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#000000">
-<title>HOLO LAB ? ORB / TEST 26</title>
-<style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
-#app{height:100%;display:flex;flex-direction:column;padding:8px 12px;background:#000}
-header{height:40px;display:flex;align-items:center;gap:14px;font-size:10px;letter-spacing:.12em;white-space:nowrap}
-header b{font-size:12px;letter-spacing:.22em}header span{opacity:.48}header div{margin-left:auto;display:flex;gap:8px}
-button{background:#151515;color:#eee;border:1px solid #444;border-radius:999px;padding:8px 12px;font-size:10px}
-main{flex:1;min-height:0;display:flex;gap:12px;align-items:center;justify-content:center}
-section{position:relative;height:min(74vh,41vw);aspect-ratio:1;background:#050507;border:1px solid #222;overflow:hidden}
-canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-.eye{position:absolute;left:8px;bottom:7px;font-size:8px;opacity:.34}.ver{position:absolute;right:8px;top:7px;font-size:8px;opacity:.55;font-weight:700}
-footer{height:24px;text-align:center;font-size:9px;opacity:.42;padding-top:7px;letter-spacing:.08em;white-space:nowrap}
-@media(orientation:portrait){
- #app{position:absolute;width:100vh;height:100vw;left:0;top:100%;transform-origin:0 0;transform:rotate(-90deg)}
-}
-</style>
+<link rel=stylesheet href="style.css?v=27b">
 <div id=app>
-<header><b>HOLO LAB</b><span>? ORB / TEST 26</span><div><button id=tilt>TILT ACT</button><button id=reset>RESET</button></div></header>
+<header><b>HOLO LAB</b><span>? ORB / TEST 27b</span><div><button id=reset>RESET</button><button id=motion>TILT ON</button></div></header>
 <main>
-<section><canvas id=right></canvas><small class=eye>RIGHT</small><small class=ver>V26</small></section>
-<section><canvas id=left></canvas><small class=eye>LEFT</small><small class=ver>V26</small></section>
+<section><canvas id=L></canvas><small>LEFT</small></section>
+<section><canvas id=R></canvas><small>RIGHT</small></section>
 </main>
-<footer>TEST 26 / ±30° / spherical-grid highlights / unified extrusion</footer>
+<footer>TEST 27b / ±30° / Bunkyu-like sculpt / opaque holo / aurora shell / LR hue phase</footer>
 </div>
-<script src="app.js?v=26"></script>
+<script src="app.js?v=27b"></script>
