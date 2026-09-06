@@ -1,5 +1,5 @@
 (()=>{
-const VERSION="28";
+const VERSION="29";
 const C=[L,R], MAX=Math.PI/6, T=Math.PI*2;
 let tx=0,ty=0,ax=0,ay=0,rg=0,rb=0,bg=0,bb=0,have=0,drag=0,lx=0,ly=0;
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v)), fr=v=>v-Math.floor(v);
@@ -76,8 +76,12 @@ function shell(g,w,h,e){
   ];
   for(let i=0;i<blobs.length;i++){
     let [bx,by,ph,op,sz]=blobs[i];
-    let x=cx+bx*R+Math.sin(ax*1.7+i*.91+eyePhase*7)*R*.10;
-    let y=cy+by*R+Math.cos(ay*1.6+i*.73-eyePhase*5)*R*.09;
+    // V29: the aurora, not the highlight, carries the tilt motion.
+    // Move the broad color fields across the projected sphere with generous travel.
+    let mx=Math.sin(ax*2.15+i*.91+eyePhase*7)*.28 + Math.sin(ay*1.10+i*.37)*.10;
+    let my=Math.sin(ay*2.05+i*.73-eyePhase*5)*.25 - Math.sin(ax*1.05+i*.51)*.09;
+    let x=cx+(bx+mx)*R;
+    let y=cy+(by+my)*R;
     let rr=R*sz;
     let gr=o.createRadialGradient(x,y,0,x,y,rr);
     let hp=ph+ax*.16+ay*.09+eyePhase;
@@ -122,60 +126,30 @@ function shell(g,w,h,e){
   o.globalCompositeOperation="source-over";
   g.drawImage(off,0,0);
 
-  // Sphere-surface area-light reflections.
-  // V28: each highlight is a rounded rectangle defined on a tangent plane,
-  // then wrapped onto the sphere. Perspective/curvature therefore changes
-  // BOTH its apparent width and length as it approaches the limb.
-  function norm3(p){let m=Math.hypot(p[0],p[1],p[2])||1;return[p[0]/m,p[1]/m,p[2]/m]}
-  function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
-  function poleVec(lon,lat){return[Math.sin(lon)*Math.cos(lat),Math.sin(lat),Math.cos(lon)*Math.cos(lat)]}
-  function projSphere(p){return[cx+p[0]*R,cy-p[1]*R,p[2]]}
-  function roundedRectBoundary(hw,hh,cr,n=7){
-    // Clockwise, starting near upper-right. Rounded corners avoid paper-strip corners.
-    const out=[], corners=[[hw-cr,hh-cr,0],[hw-cr,-hh+cr,-Math.PI/2],[-hw+cr,-hh+cr,-Math.PI],[-hw+cr,hh-cr,-Math.PI*1.5]];
-    for(const [x,y,a0] of corners) for(let i=0;i<=n;i++){
-      let a=a0+Math.PI/2*i/n; out.push([x+cr*Math.cos(a),y+cr*Math.sin(a)]);
-    }
-    return out;
+  // V29 fixed holographic highlights.  Motion belongs to the aurora instead.
+  // These are deliberately simple, wide, rounded window-like reflections.
+  function fixedHoloHighlight(nx,ny,ww,hh,rot,alpha,phase){
+    const x=cx+nx*R, y=cy+ny*R;
+    g.save(); g.translate(x,y); g.rotate(rot);
+    const rad=Math.min(ww,hh)*.18;
+    const X=-ww/2,Y=-hh/2;
+    g.beginPath();
+    g.moveTo(X+rad,Y); g.lineTo(X+ww-rad,Y); g.quadraticCurveTo(X+ww,Y,X+ww,Y+rad);
+    g.lineTo(X+ww,Y+hh-rad); g.quadraticCurveTo(X+ww,Y+hh,X+ww-rad,Y+hh);
+    g.lineTo(X+rad,Y+hh); g.quadraticCurveTo(X,Y+hh,X,Y+hh-rad);
+    g.lineTo(X,Y+rad); g.quadraticCurveTo(X,Y,X+rad,Y); g.closePath();
+    const gr=g.createLinearGradient(X,Y,X+ww,Y+hh);
+    const hp=fr(phase+ax*.18+ay*.10+eyePhase);
+    gr.addColorStop(0,hsv(hp,.58,1,alpha*.72));
+    gr.addColorStop(.35,hsv(hp+.16,.72,1,alpha));
+    gr.addColorStop(.68,hsv(hp+.38,.68,1,alpha*.92));
+    gr.addColorStop(1,hsv(hp+.62,.55,1,alpha*.68));
+    g.fillStyle=gr; g.fill();
+    g.restore();
   }
-  function highlightPatch(pLon,pLat,halfW,halfH,corner,alpha){
-    // Reflection pole slides over the shell with view angle.
-    pLon += ax*.72 + e*.018;
-    pLat += ay*.62;
-    const N=poleVec(pLon,pLat);
-    let U=norm3(cross([0,1,0],N));
-    if(Math.hypot(...U)<.01) U=[1,0,0];
-    const V=norm3(cross(N,U));
-    const boundary=roundedRectBoundary(halfW,halfH,corner,8);
-    const pts=[];
-    // Map the planar area light to the sphere by radial normalization.
-    // This is not a screen-space strip: at grazing angles the projected width collapses.
-    for(const [u,v] of boundary){
-      let p=norm3([N[0]+U[0]*u+V[0]*v,N[1]+U[1]*u+V[1]*v,N[2]+U[2]*u+V[2]*v]);
-      pts.push(p);
-    }
-    if(!pts.some(p=>p[2]>.015)) return;
-    g.save();g.beginPath();let first=true;
-    for(const p of pts){
-      if(p[2]<=.005) continue;
-      const q=projSphere(p);
-      if(first){g.moveTo(q[0],q[1]);first=false}else g.lineTo(q[0],q[1]);
-    }
-    if(first){g.restore();return}
-    g.closePath();
-    // Broad soft-edged area-light value: bright center, slightly dimmer edge,
-    // while retaining a clearly bounded reflected shape.
-    const pc=projSphere(N);
-    let gr=g.createRadialGradient(pc[0],pc[1],0,pc[0],pc[1],R*.34);
-    gr.addColorStop(0,hsv(.50+ax*.06-ay*.04+eyePhase,.055,1,alpha));
-    gr.addColorStop(.70,hsv(.50+ax*.06-ay*.04+eyePhase,.075,.98,alpha*.88));
-    gr.addColorStop(1,hsv(.50+ax*.06-ay*.04+eyePhase,.10,.95,alpha*.70));
-    g.fillStyle=gr;g.fill();g.restore();
-  }
-  // Upright-? reference: front reflection = upper-left, rear reflection = lower-right.
-  // Initial positions are deliberately near the limb. Long axis follows the local sphere grid.
-  highlightPatch(-1.00,.48,.070,.48,.050,.60);
-  highlightPatch( 1.00,-.48,.062,.44,.046,.40);
+  // Upright-? frame: upper-left / lower-right. Fixed in screen position.
+  fixedHoloHighlight(-.66,-.42,R*.16,R*.62,-.16,.56,.48);
+  fixedHoloHighlight( .66, .42,R*.14,R*.54,-.16,.38,.82);
 
   // Thin optical boundary only.
   g.save();g.beginPath();g.arc(cx,cy,R,0,T);g.lineWidth=R*.014;
@@ -252,53 +226,31 @@ function ques(g,w,h,e){
   g.lineJoin="round";g.lineCap="round";g.lineWidth=edgeW/S;
   g.strokeStyle=hsv(hue+.18,.95,.66);g.stroke();g.restore();
 
-  // Dot: part of the SAME swept planar ? as the hook.
-  // Same 2D shear, same zBack/zFront, same rotQ() and same perspective projection.
-  // It therefore moves/foreshortens by exactly the same rigid-body rule as the hook.
+  // V29 dot: use exactly the same swept-silhouette construction as the hook.
+  // No independent cylinder projection: every depth slice uses the identical q(z)
+  // translation as the hook, so the visible extrusion vector is necessarily identical.
   const dotD=stemW*1.2, rrObj=(dotD/S)*.5;
-  const y0=-.68, x0=0, seg=32;
-  const shear=-.10;
-  function dotPoint(a,z){
-    const yy=y0+rrObj*Math.sin(a);
-    const xx=x0+rrObj*Math.cos(a)+shear*yy;
-    return [xx,yy,z];
+  const y0=-.68, x0=0, shear=-.10;
+  function dotPath2D(){
+    g.beginPath();
+    // Circle is defined in the same sheared 2D object plane as qp().
+    g.arc(x0,y0,rrObj,0,T); g.closePath();
   }
-  function polyPath(pts){
-    g.beginPath(); g.moveTo(pts[0][0],pts[0][1]);
-    for(let i=1;i<pts.length;i++) g.lineTo(pts[i][0],pts[i][1]);
-    g.closePath();
+  // rear boundary
+  g.save();g.translate(back[0],back[1]);g.scale(S,-S);g.transform(1,0,shear,1,0,0);
+  dotPath2D();g.fillStyle=hsv(hue+.43,.88,.58);g.fill();
+  g.lineWidth=edgeW/S;g.strokeStyle=hsv(hue+.43,.92,.72);g.stroke();g.restore();
+  // same straight extrusion slices as hook
+  for(let k=0;k<slices;k++){
+    let t=k/(slices-1),z=zBack+(zFront-zBack)*t,q=pr(rotQ([0,0,z]),w,h,e);
+    g.save();g.translate(q[0],q[1]);g.scale(S,-S);g.transform(1,0,shear,1,0,0);
+    dotPath2D();
+    g.fillStyle=hsv(fr(hue+.18+t*.78+(ax/MAX)*.10+e*.018),.92,.80);g.fill();g.restore();
   }
-  let backRing=[],frontRing=[];
-  for(let i=0;i<seg;i++){
-    const a=i*T/seg;
-    backRing.push(pr(rotQ(dotPoint(a,zBack)),w,h,e));
-    frontRing.push(pr(rotQ(dotPoint(a,zFront)),w,h,e));
-  }
-  polyPath(backRing);
-  g.fillStyle=hsv(hue+.43,.88,.58); g.fill();
-  g.lineJoin="round"; g.lineWidth=edgeW;
-  g.strokeStyle=hsv(hue+.43,.92,.72); g.stroke();
-
-  let sideFaces=[];
-  for(let i=0;i<seg;i++){
-    const j=(i+1)%seg,a0=i*T/seg,a1=j*T/seg;
-    const r0=rotQ(dotPoint(a0,zBack)),r1=rotQ(dotPoint(a1,zBack));
-    const r2=rotQ(dotPoint(a1,zFront)),r3=rotQ(dotPoint(a0,zFront));
-    sideFaces.push({z:(r0[2]+r1[2]+r2[2]+r3[2])*.25,
-      pts:[pr(r0,w,h,e),pr(r1,w,h,e),pr(r2,w,h,e),pr(r3,w,h,e)],
-      a:(a0+a1)*.5});
-  }
-  sideFaces.sort((a,b)=>a.z-b.z);
-  for(const f of sideFaces){
-    polyPath(f.pts);
-    g.fillStyle=hsv(fr(hue+.18+f.a/T*.92+(ax/MAX)*.10+e*.018),.92,.80);
-    g.fill();
-  }
-  polyPath(frontRing);
-  g.fillStyle=hsv(hue,.90,.96); g.fill();
-  g.lineJoin="round"; g.lineWidth=edgeW;
-  g.strokeStyle=hsv(hue+.18,.95,.66); g.stroke();
-
+  // front plane
+  g.save();g.translate(front[0],front[1]);g.scale(S,-S);g.transform(1,0,shear,1,0,0);
+  dotPath2D();g.fillStyle=hsv(hue,.90,.96);g.fill();
+  g.lineWidth=edgeW/S;g.strokeStyle=hsv(hue+.18,.95,.66);g.stroke();g.restore();
 
 }
 
