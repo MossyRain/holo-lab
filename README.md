@@ -1,16 +1,10 @@
-# HOLO LAB v2.1
+# HOLO LAB v2.2
 
-## Changes from v2.0
-- COLLECTION / EDITOR / VIEWER are all landscape-oriented from launch.
-- COLLECTION grid scroll fixed for iPhone/PWA, including momentum scrolling.
-- Default STORM order: 天変ストム → 溟流ストム → 曐暴ストム.
-- EDITOR adds MOVE UP / MOVE DOWN for custom display order.
-- Viewer previous/next continues to follow the current collection order/filter.
-- EDITOR now shows UNSAVED CHANGES ● after edits and SAVED ✓ after SAVE.
-- SAVE button gives a temporary visual confirmation after a successful IndexedDB write.
-- Existing local sticker data remains in IndexedDB.
-
-## Gesture input
-- Sticker surface remains viewing-only.
-- Swipe outside the sticker pair is reserved for holo input.
-- Two-finger pinch outside the sticker pair changes viewDepth; sticker size itself does not zoom.
+- COLLECTIONをシール中心の横画面UIへ圧縮。
+- HOLO LABロゴ横に SEARCH / FILTER / SORT / EDIT を集約。
+- 一覧カードのキャラクター名・読み表示を削除し、シール画像のみ表示。
+- SEARCHは必要時のみ1行展開。
+- FILTERは横1列のコンパクトパネルとして展開し、一覧面積を維持。
+- iPhoneのステータスバー／セーフエリアと重ならないよう、横画面左側の余白を強化。
+- COLLECTIONの縦スクロールを維持・改善。
+- v2.1のEDITOR、任意順、SAVE状態表示、VIEWER外周スワイプ、viewDepthピンチ入力を継承。
