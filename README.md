@@ -1,17 +1,16 @@
-# HOLO LAB v2.0
+# HOLO LAB v2.1
 
-コレクション管理の基盤版。ホロ描画そのものは今回の改訂対象外です。
+## Changes from v2.0
+- COLLECTION / EDITOR / VIEWER are all landscape-oriented from launch.
+- COLLECTION grid scroll fixed for iPhone/PWA, including momentum scrolling.
+- Default STORM order: 天変ストム → 溟流ストム → 曐暴ストム.
+- EDITOR adds MOVE UP / MOVE DOWN for custom display order.
+- Viewer previous/next continues to follow the current collection order/filter.
+- EDITOR now shows UNSAVED CHANGES ● after edits and SAVED ✓ after SAVE.
+- SAVE button gives a temporary visual confirmation after a successful IndexedDB write.
+- Existing local sticker data remains in IndexedDB.
 
-- COLLECTION / VIEWER / EDITOR
-- 10キャラクター枠
-- ストム3種の静止画像を初期登録
-- IndexedDBへローカル保存
-- 名前・画像・分類・自由タグ編集
-- 分類軸の追加
-- SEARCH / SORT / FILTER
-- JSONによる EXPORT ALL / IMPORT ALL
-- VIEWERの前後ボタン
-- シール外のスワイプを共通ホロ入力として取得
-- シール外のピンチを viewDepth として取得（シール表示サイズは変えない）
-
-注意: GitHub Pagesへ上書き保存する機能ではありません。編集データはブラウザ内に保存されます。
+## Gesture input
+- Sticker surface remains viewing-only.
+- Swipe outside the sticker pair is reserved for holo input.
+- Two-finger pinch outside the sticker pair changes viewDepth; sticker size itself does not zoom.
