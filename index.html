@@ -1,43 +1,6 @@
-<!doctype html>
-<html lang="ja"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#08080a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="HOLO LAB">
-<link rel="apple-touch-icon" href="./icon-180.png">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="stylesheet" href="./style.css">
-<title>HOLO LAB</title></head><body><div id="shell">
-
-<section id="menu" class="screen active">
-  <header><h1>HOLO LAB</h1><p>DIGITAL HOLOGRAM STICKERS</p></header>
-  <button class="tile" id="openMira">
-    <img src="./mira-jii.jpg" alt="">
-    <span><b>聖虚MIRA壽</b><small>セントホロミラージュ</small></span>
-  </button>
-  <footer>HOLO LAB v1.7</footer>
-</section>
-
-<section id="viewer" class="screen">
-  <div class="viewerFrame">
-    <div class="bar top">
-      <button id="back">‹ MENU</button>
-      <div class="name"><b>聖虚MIRA壽</b><small>セントホロミラージュ</small></div>
-      <button id="start">TILT START</button>
-    </div>
-
-    <div id="pair">
-      <div class="card"></div>
-      <div class="card"></div>
-    </div>
-
-    <div class="bar bottom">
-      <span id="status">交差法で中央に結像 / 傾けてホロを操作</span>
-      <button id="reset">RESET</button>
-    </div>
-  </div>
-</section>
-
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#08080a"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="apple-mobile-web-app-title" content="HOLO LAB"><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icon-180.png"><link rel="stylesheet" href="./style.css"><title>HOLO LAB</title></head><body>
+<div id="app">
+<section id="collection" class="screen active"><header><div><h1>HOLO LAB</h1><p>PRIVATE HOLOGRAM COLLECTION</p></div><button id="editOpen">EDIT</button></header><div class="tools"><input id="search" placeholder="SEARCH"><button id="sortBtn">SORT: ORDER</button><button id="filterBtn">FILTER</button></div><div id="filterPanel" class="panel hidden"></div><main id="grid"></main><footer>HOLO LAB v2.0 / LOCAL COLLECTION</footer></section>
+<section id="viewer" class="screen"><div class="viewerFrame" id="gestureZone"><div class="bar top"><button id="back">‹ COLLECTION</button><div class="name"><b id="viewName"></b><small id="viewSub"></small></div><button id="start">TILT START</button></div><div class="stage"><button class="nav prev" id="prev">‹</button><div id="pair"><div class="card"><img></div><div class="card"><img></div></div><button class="nav next" id="next">›</button></div><div class="bar bottom"><span id="status">外側スワイプ＝ホロ操作 / ピンチ＝視点遠近</span><button id="reset">RESET</button></div></div></section>
+<section id="editor" class="screen"><header><div><h1>EDITOR</h1><p>LOCAL STICKER DATA</p></div><button id="editClose">DONE</button></header><div class="editorBody"><aside id="editList"></aside><form id="form"><label>NAME<input id="fName"></label><label>READING / SUBTITLE<input id="fReading"></label><label>SERIES<input id="fSeries"></label><label>TYPE<input id="fType" placeholder="人型 / 動物 / その他"></label><label>GENDER<input id="fGender" placeholder="女性 / 男性 / なし・不明"></label><label>COUNT<input id="fCount" placeholder="単体 / 複数"></label><label>SUBJECT<input id="fSubject" placeholder="自然現象 / 宇宙 / 抽象…"></label><label>FREE TAGS<input id="fTags" placeholder="雷, 虹, 猫…"></label><label>IMAGE<input id="fImage" type="file" accept="image/*"></label><div class="editorActions"><button type="button" id="newSticker">＋ NEW</button><button type="submit" class="primary">SAVE</button></div><hr><h2>CLASSIFICATION AXES</h2><div id="axes"></div><div class="axisAdd"><input id="newAxis" placeholder="新しい分類軸"><button type="button" id="addAxis">＋ AXIS</button></div><hr><h2>BACKUP</h2><div class="editorActions"><button type="button" id="exportAll">EXPORT ALL</button><label class="importBtn">IMPORT ALL<input id="importAll" type="file" accept="application/json"></label></div><small class="note">画像・設定はこのiPhoneのHOLO LAB保存領域に保存されます。</small></form></div></section>
 </div><script src="./app.js"></script></body></html>
