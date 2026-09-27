@@ -1,10 +1,8 @@
-# HOLO LAB v2.2
+# HOLO LAB v2.3
 
-- COLLECTIONをシール中心の横画面UIへ圧縮。
-- HOLO LABロゴ横に SEARCH / FILTER / SORT / EDIT を集約。
-- 一覧カードのキャラクター名・読み表示を削除し、シール画像のみ表示。
-- SEARCHは必要時のみ1行展開。
-- FILTERは横1列のコンパクトパネルとして展開し、一覧面積を維持。
-- iPhoneのステータスバー／セーフエリアと重ならないよう、横画面左側の余白を強化。
-- COLLECTIONの縦スクロールを維持・改善。
-- v2.1のEDITOR、任意順、SAVE状態表示、VIEWER外周スワイプ、viewDepthピンチ入力を継承。
+- COLLECTIONの全シール背景に傾き連動KIRAを追加
+- 画像未設定スロットではKIRA背景をそのまま確認可能
+- 透過PNGを前面に重ねられる構造
+- EDITORにKIRA COLORを追加（SILVER / GOLD / BLUE / PURPLE / RED / GREEN）
+- iPhoneでは最初のタッチ後に傾きセンサー許可を要求する場合があります
+- PC等ではポインター移動でもKIRAを確認可能
