@@ -8,3 +8,5 @@ header{display:flex;align-items:flex-start;justify-content:space-between;gap:10p
 @media(orientation:portrait){#app{position:absolute;width:100vh;height:100vw;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center}#collection,#editor{padding:8px max(14px,calc(env(safe-area-inset-bottom) + 8px)) 8px max(52px,calc(env(safe-area-inset-top) + 14px))}#viewer{position:static;width:100%;height:100%;transform:none}.viewerFrame{padding:8px max(16px,calc(env(safe-area-inset-bottom) + 8px)) 8px max(52px,calc(env(safe-area-inset-top) + 14px))}.card{width:min(calc((100vh - 160px)/2),calc(100vw - 90px));height:min(calc((100vh - 160px)/2),calc(100vw - 90px))}}
 
 #form select{width:100%;border:1px solid #ccc;background:#fff;border-radius:8px;padding:9px;font-size:11px;color:#111}
+
+.saveState.error{color:#a00000;font-weight:700}
